@@ -1,13 +1,18 @@
 ** My live OS
-
-I always carry my USB in anywhere with me, so the USB is a Live OS.
-
-This repo will help us to build Live OS by using live-build, then you can create Live OS into USB.
-
-Detail about [[http://debian-live.alioth.debian.org/live-manual/stable/manual/html/live-manual.en.html][live-build]]
-
-Actually my USB have two OS: [[https://tails.boum.org][Tails]] and [[https://www.debian.org][Debian]] (this OS)
-
+   
+   I always carry my USB in anywhere with me, so the USB is a Live OS.
+   
+   This repo will help us to build Live OS by using live-build, then you can create Live OS into USB.
+   
+   Detail about [[http://debian-live.alioth.debian.org/live-manual/stable/manual/html/live-manual.en.html][live-build]]
+   
+   Actually my USB have two OS: [[https://tails.boum.org][Tails]] and [[https://www.debian.org][Debian]] (this OS)
+   
 ** Features
    - i3 window manager
    - [[https://github.com/TxGVNN/i3-config][My i3-config]]
+     
+** Build
+   #+BEGIN_SRC shell
+   lb build
+   #+END_SRC
