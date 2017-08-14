@@ -1,22 +1,15 @@
 #!/bin/sh
-
 set -e
 
-case "$(dpkg --print-architecture)" in
-	amd64)
-		_SOURCE="true"
-		;;
-
-	i386)
-		_SOURCE="false"
-		;;
-esac
+_ARCH="amd64"
+_MIRROR="http://debian.xtdv.net/debian"
 
 lb config noauto \
-	--clean \
-	--ignore-system-defaults \
-	--mode debian \
-	--debian-installer live \
+	--verbose \
+	--architecture "${_ARCH}" \
+	--archive-areas "main contrib non-free" \
 	--linux-packages "linux-image linux-headers" \
-	--source "${_SOURCE}" \
-"${@}"
+	--mirror-binary "${_MIRROR}" \
+	--mirror-chroot "${_MIRROR}" \
+	--mirror-bootstrap "${_MIRROR}" \
+    "${@}"
