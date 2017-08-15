@@ -6,15 +6,15 @@
 
 Cmdline ()
 {
-	# Reading kernel command line
-	for _PARAMETER in ${LIVE_CONFIG_CMDLINE}
-	do
-		case "${_PARAMETER}" in
+    # Reading kernel command line
+    for _PARAMETER in ${LIVE_CONFIG_CMDLINE}
+    do
+        case "${_PARAMETER}" in
             live-config.username=*|username=*)
-				LIVE_USERNAME="${_PARAMETER#*username=}"
-				;;
-		esac
-	done
+                LIVE_USERNAME="${_PARAMETER#*username=}"
+                ;;
+        esac
+    done
 }
 
 Init (){
@@ -24,16 +24,22 @@ Init (){
     then
         exit 0
     fi
-    
-	if [ ! -d /lib/live/i3-config ]
+
+    if [ ! -d /lib/live/i3-config ]
     then 
-		exit 0;
-	fi
+        exit 0;
+    fi
+
+    if [ ! -d /home/${LIVE_USERNAME}/.i3 ]
+    then 
+        exit 0;
+    fi
+
     echo -n " i3-config"
 }
 
 Config (){
-	cp -a /lib/live/i3-config /home/${LIVE_USERNAME}/.i3
+    cp -a /lib/live/i3-config /home/${LIVE_USERNAME}/.i3
 }
 
 Cmdline

@@ -6,28 +6,28 @@
 
 Cmdline ()
 {
-	# Reading kernel command line
-	for _PARAMETER in ${LIVE_CONFIG_CMDLINE}
-	do
-		case "${_PARAMETER}" in
+    # Reading kernel command line
+    for _PARAMETER in ${LIVE_CONFIG_CMDLINE}
+    do
+        case "${_PARAMETER}" in
             live-config.username=*|username=*)
-				LIVE_USERNAME="${_PARAMETER#*username=}"
-				;;
-		esac
-	done
+                LIVE_USERNAME="${_PARAMETER#*username=}"
+                ;;
+        esac
+    done
 }
 
 Init (){
-	if [ ! -d /lib/live/dotfiles ] ; then 
-		exit 0;
-	fi
-    echo -n " dotfiles"
+    if [ ! -d /lib/live/dotfiles ] ; then 
+        exit 0;
+    fi
 
+    echo -n " dotfiles"
 }
 
 Config (){
     chown ${LIVE_USERNAME}: /lib/live/dotfiles -R    
-	cp -a /lib/live/dotfiles/. /home/${LIVE_USERNAME}/
+    cp -a /lib/live/dotfiles/. /home/${LIVE_USERNAME}/
 }
 
 Cmdline
