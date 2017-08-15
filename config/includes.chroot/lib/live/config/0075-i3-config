@@ -30,7 +30,7 @@ Init (){
         exit 0;
     fi
 
-    if [ ! -d /home/${LIVE_USERNAME}/.i3 ]
+    if [ -d /home/${LIVE_USERNAME}/.i3 ]
     then 
         exit 0;
     fi
