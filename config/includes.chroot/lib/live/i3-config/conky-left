@@ -44,6 +44,3 @@ ${voffset +20}${font DejaVu Sans Mono:pixelsize=12}${color 535C5C}
 ${color 5a715c}
   [ @author TxGVNN ]
 
-${font Inconsolata:pixelsize=12}${color 00A0A0}
-${exec cat ~/.gxt/logs/$(date +%Y-%m-%d)}
-${voffset +500}
