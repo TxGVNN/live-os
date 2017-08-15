@@ -19,6 +19,7 @@ emacs
 git
 openvpn
 screen
+debootstrap
 ibus-unikey
 chromium
 gparted
