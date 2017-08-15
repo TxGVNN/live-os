@@ -1,0 +1,41 @@
+#!/bin/sh
+
+## @TxGVNN
+
+#set -x
+
+Cmdline ()
+{
+	# Reading kernel command line
+	for _PARAMETER in ${LIVE_CONFIG_CMDLINE}
+	do
+		case "${_PARAMETER}" in
+            live-config.username=*|username=*)
+				LIVE_USERNAME="${_PARAMETER#*username=}"
+				;;
+		esac
+	done
+}
+
+Init (){
+
+    # Checking if package is installed or already configured
+    if [ ! -e /var/lib/dpkg/info/i3.list ]
+    then
+        exit 0
+    fi
+    
+	if [ ! -d /lib/live/i3-config ]
+    then 
+		exit 0;
+	fi
+    echo -n " i3-config"
+}
+
+Config (){
+	cp -a /lib/live/i3-config /home/${LIVE_USERNAME}/.i3
+}
+
+Cmdline
+Init
+Config
