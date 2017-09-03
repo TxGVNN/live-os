@@ -9,8 +9,8 @@ conky-all
 rxvt-unicode
 wicd
 ranger
-icedove
-iceweasel
+thunderbird
+firefox-esr
 alsa-utils
 acpi
 mplayer
@@ -25,4 +25,6 @@ ibus-unikey
 chromium
 gparted
 keepassx
+dirmngr
 htop
+keychain
