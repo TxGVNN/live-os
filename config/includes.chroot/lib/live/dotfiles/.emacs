@@ -40,14 +40,14 @@
 (use-package neotree
   :ensure t
   :init
-  (global-set-key [f3] 'neotree-toggle)
-  (global-set-key [f2] 'neotree-find))
+  (global-set-key (kbd "C-x t f") 'neotree-find)
+  (global-set-key (kbd "C-x t o") 'neotree-show)
+  (global-set-key (kbd "C-x t c") 'neotree-hide))
 
 ;;; flycheck
 (use-package flycheck
   :ensure t
   :init (global-flycheck-mode))
-
 
 ;;; helm-gtags
 (use-package helm-gtags
@@ -58,6 +58,7 @@
   (add-hook 'c++-mode-hook 'helm-gtags-mode)
   (add-hook 'asm-mode-hook 'helm-gtags-mode)
   (add-hook 'php-mode-hook 'helm-gtags-mode)
+  (add-hook 'python-mode-hook 'helm-gtags-mode)
   (eval-after-load "helm-gtags"
     '(progn
        (define-key helm-gtags-mode-map (kbd "C-c t f") 'helm-gtags-find-tag)
@@ -66,7 +67,8 @@
        (define-key helm-gtags-mode-map (kbd "C-c t g") 'helm-gtags-parse-file)
        (define-key helm-gtags-mode-map (kbd "C-c t p") 'helm-gtags-previous-history)
        (define-key helm-gtags-mode-map (kbd "C-c t n") 'helm-gtags-next-history)
-       (define-key helm-gtags-mode-map (kbd "C-c t t") 'helm-gtags-pop-stack)))
+       (define-key helm-gtags-mode-map (kbd "C-c t t") 'helm-gtags-pop-stack) )
+    )
   )
 
 ;;; git-gutter
@@ -75,20 +77,19 @@
   :init
   (global-git-gutter-mode 1)
   (git-gutter:linum-setup)
-  (global-set-key (kbd "C-c g p") 'git-gutter:previous-hunk)
-  (global-set-key (kbd "C-c g n") 'git-gutter:next-hunk)
+  (global-set-key (kbd "C-x g p") 'git-gutter:previous-hunk)
+  (global-set-key (kbd "C-x g n") 'git-gutter:next-hunk)
+  (global-set-key (kbd "C-x g s") 'git-gutter:stage-hunk)
   )
 
 ;;; magit
 (use-package magit
   :ensure t
   :init
-  (global-set-key (kbd "C-c g s") 'magit-status)
-  (global-set-key (kbd "C-c g a") 'magit-stage)
-  (global-set-key (kbd "C-c g p") 'magit-push)
-  (global-set-key (kbd "C-c g d") 'magit-diff)
-  (global-set-key (kbd "C-c g l") 'magit-log)
-  (global-set-key (kbd "C-c g o") 'magit-log-all)
+  (global-set-key (kbd "C-x g v") 'magit-status)
+  (global-set-key (kbd "C-x g d") 'magit-diff)
+  (global-set-key (kbd "C-x g l") 'magit-log-buffer-file)
+  (global-set-key (kbd "C-x g a") 'magit-log-all)
   )
 
 ;;; switch-window
@@ -120,7 +121,6 @@
   (setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60))
   )
 (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
-
 
 ;;; customize
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -155,13 +155,18 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(Buffer-menu-use-header-line nil)
+ '(menu-bar-mode nil)
+ '(backup-by-copying t)
+ '(backup-directory-alist (quote (("." . "~/.emacs.d/backup"))))
+ '(delete-old-versions 6)
+ '(keep-new-versions 2)
+ '(version-control t)
  '(column-number-mode t)
  '(custom-enabled-themes (quote (deeper-blue)))
  '(default-input-method "vietnamese-telex")
  '(global-linum-mode t)
  '(helm-gtags-auto-update t)
  '(indent-tabs-mode nil)
- '(menu-bar-mode nil)
  '(package-selected-packages
    (quote
     (dockerfile-mode go-mode helm-gitlab gitlab kubernetes yaml-mode bitbucket helm which-key use-package switch-window nhexl-mode neotree multiple-cursors markdown-mode magit helm-projectile helm-gtags helm-ag git-gutter flycheck ac-php)))
