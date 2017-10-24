@@ -2,11 +2,13 @@
 set -e
 
 _ARCH="amd64"
-_MIRROR="http://debian.xtdv.net/debian"
+_MIRROR="http://deb.debian.org/debian"
+_DIST="stretch"
 
 lb config noauto \
 	--verbose \
 	--architecture "${_ARCH}" \
+	--distribution "${_DIST}" \
 	--archive-areas "main contrib non-free" \
 	--linux-packages "linux-image linux-headers" \
 	--mirror-binary "${_MIRROR}" \
