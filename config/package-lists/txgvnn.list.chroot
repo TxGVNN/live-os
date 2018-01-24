@@ -9,11 +9,12 @@ conky-all
 rxvt-unicode
 wicd
 ranger
-thunderbird
 firefox-esr
+mutt
 alsa-utils
 acpi
 mplayer
+mpv
 fonts-font-awesome
 fonts-inconsolata
 emacs
