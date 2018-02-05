@@ -40,6 +40,7 @@ Init (){
 
 Config (){
     cp -a /lib/live/i3-config /home/${LIVE_USERNAME}/.i3
+    chown  ${LIVE_USERNAME}: /home/${LIVE_USERNAME}/.i3 -R
 }
 
 Cmdline
