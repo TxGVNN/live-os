@@ -9,6 +9,7 @@ lb config noauto \
 	--verbose \
 	--architecture "${_ARCH}" \
 	--distribution "${_DIST}" \
+    --apt-source-archives "false" \
 	--archive-areas "main contrib non-free" \
 	--linux-packages "linux-image linux-headers" \
 	--mirror-binary "${_MIRROR}" \
