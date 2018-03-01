@@ -206,6 +206,7 @@ exec --no-startup-id dunst
 exec --no-startup-id ibus-daemon --xim -d -r
 #exec --no-startup-id xautolock -time 5 -locker '~/.i3/bin/i3lock.sh'
 #exec --no-startup-id wicd-gtk
+exec --no-start-id redshift
 
 # Assign workspace
 assign [class="Keepassx"] $tag0
