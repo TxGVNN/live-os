@@ -30,3 +30,7 @@ dirmngr
 htop
 keychain
 curl
+tcpdump
+policykit-1
+redshift
+tor
