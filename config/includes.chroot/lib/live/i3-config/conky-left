@@ -43,5 +43,4 @@ ${voffset +20}${font DejaVu Sans Mono:pixelsize=12}${color 535C5C}
    |_|  ${color de6839}/_/ \ ${color 535C5C}\_\_/  \_\/  |_| \| |_| \|
 ${color 5a715c}
   [ @author TxGVNN ]
-
-
+${voffset +40}
