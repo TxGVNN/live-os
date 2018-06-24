@@ -6,12 +6,13 @@ cryptsetup
 curl
 debootstrap
 dirmngr
-emacs
+emacs25
 feh
 firefox-esr
 fonts-font-awesome
 fonts-inconsolata
 git
+global
 gparted
 htop
 i3
@@ -25,7 +26,7 @@ openvpn
 policykit-1
 ranger
 redshift
-rxvt-unicode
+rxvt-unicode-256color
 screen
 scrot
 silversearcher-ag
