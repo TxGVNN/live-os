@@ -18,7 +18,7 @@ Cmdline ()
 }
 
 Init (){
-    if [ ! -d /lib/live/dotfiles ] ; then 
+    if [ ! -d /lib/live/dotfiles ] ; then
         exit 0;
     fi
 
@@ -26,8 +26,8 @@ Init (){
 }
 
 Config (){
-    chown ${LIVE_USERNAME}: /lib/live/dotfiles -R    
-    cp -a /lib/live/dotfiles/. /home/${LIVE_USERNAME}/
+    chown ${LIVE_USERNAME}: /lib/live/dotfiles -R
+    cp -a /lib/live/dotfiles/. "/home/${LIVE_USERNAME}/"
 }
 
 Cmdline

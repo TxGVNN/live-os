@@ -26,12 +26,12 @@ Init (){
     fi
 
     if [ ! -d /lib/live/i3-config ]
-    then 
+    then
         exit 0;
     fi
 
-    if [ -d /home/${LIVE_USERNAME}/.i3 ]
-    then 
+    if [ -d "/home/${LIVE_USERNAME}/.i3" ]
+    then
         exit 0;
     fi
 
@@ -39,8 +39,8 @@ Init (){
 }
 
 Config (){
-    cp -a /lib/live/i3-config /home/${LIVE_USERNAME}/.i3
-    chown  ${LIVE_USERNAME}: /home/${LIVE_USERNAME}/.i3 -R
+    cp -a /lib/live/i3-config "/home/${LIVE_USERNAME}/.i3"
+    chown  ${LIVE_USERNAME}: "/home/${LIVE_USERNAME}/.i3" -R
 }
 
 Cmdline
