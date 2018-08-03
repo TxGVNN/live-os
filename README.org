@@ -3,11 +3,9 @@
    I always carry the live OS in anywhere. Just a small USB
 
    This repo will help us to build Live OS by using live-build, then you can create Live OS into USB.
-   
-   Detail about [[http://debian-live.alioth.debian.org/live-manual/stable/manual/html/live-manual.en.html][live-build]]
-   
+
    Actually, my USB consist of two OS: [[https://tails.boum.org][Tails]] and [[https://www.debian.org][Debian]] (this OS)
-   
+
 ** Features
    - i3 window manager
    - [[https://github.com/TxGVNN/i3-config][My i3-config]]
@@ -16,3 +14,13 @@
    #+BEGIN_SRC shell
    lb build
    #+END_SRC
+
+*** Requried
+    #+BEGIN_SRC
+    apt-get install live-build live-config
+    #+END_SRC
+*** More info
+    #+BEGIN_SRC
+    apt-get install live-manual-html
+    # Then access file:///usr/share/doc/live-manual/html/live-manual/index.en.html
+    #+END_SRC

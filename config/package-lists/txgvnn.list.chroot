@@ -6,7 +6,7 @@ cryptsetup
 curl
 debootstrap
 dirmngr
-emacs25
+emacs25-lucid
 feh
 firefox-esr
 fonts-font-awesome
@@ -30,9 +30,12 @@ rxvt-unicode-256color
 screen
 scrot
 silversearcher-ag
+strace
 tcpdump
 tor
+vim
 wicd
 xbacklight
+xdotool
 xinit
 xinput
