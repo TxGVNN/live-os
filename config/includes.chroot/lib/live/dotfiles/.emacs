@@ -1,4 +1,6 @@
-;;; package --- Summary;
+;;; .emacs --- initialization file
+;;; Commentary: by TxGVNN
+
 (require 'package)
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/"))
@@ -9,59 +11,49 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-;;; helm
+;;; Packages
+;; helm
 (use-package helm
   :ensure t
   :init
   (require 'helm)
   (require 'helm-config)
-  (helm-mode 1)
   (setq helm-mode-line-string "")
-  (global-set-key (kbd "M-x") 'helm-M-x)
-  (global-set-key (kbd "C-x C-f") 'helm-find-files)
+  (setq helm-split-window-inside-p t)
+  (setq helm-autoresize-max-height 0)
+  (setq helm-autoresize-min-height 25)
   (add-to-list 'helm-sources-using-default-as-input 'helm-source-man-pages)
-  (define-key global-map (kbd "C-c m") 'helm-imenu)
-  (define-key global-map (kbd "C-x C-b") 'helm-buffers-list)
-  (define-key global-map (kbd "C-x b") 'helm-buffers-list))
-
-;;; helm-project
+  (helm-autoresize-mode 1)
+  (helm-mode 1)
+  :bind
+  (("M-x" . helm-M-x)
+   ("C-x C-f" . helm-find-files)
+   ("C-x C-b" . helm-buffers-list)
+   ("C-x b" . helm-buffers-list)
+   ("C-c m" . helm-imenu)
+   ("M-y" . helm-show-kill-ring)
+   :map helm-map
+   ("<tab>" . helm-execute-persistent-action)
+   ("C-i" . helm-execute-persistent-action)
+   ("C-z" . helm-select-action))
+  )
+;; helm-projectile
 (use-package helm-projectile
   :ensure t
   :init
-  (projectile-global-mode)
+  (setq projectile-keymap-prefix (kbd "C-c p"))
   (setq projectile-completion-system 'helm)
+  (projectile-mode)
   (helm-projectile-on))
-
-;;; helm-swoop
+;; helm-swoop
 (use-package helm-swoop
   :ensure t
-  :bind
-  (("M-s s" . helm-swoop))
-  )
-
-;;; which-key
-(use-package which-key
-  :ensure t
-  :init (which-key-mode))
-
-;;; neotree
-(use-package neotree
-  :ensure t
-  :init
-  (global-set-key (kbd "C-x t f") 'neotree-find)
-  (global-set-key (kbd "C-x t o") 'neotree-show)
-  (global-set-key (kbd "C-x t c") 'neotree-hide))
-
-;;; flycheck
-(use-package flycheck
-  :ensure t
-  :init (global-flycheck-mode))
-
-;;; helm-gtags
+  :bind ("M-s w" . helm-swoop))
+;; helm-gtags
 (use-package helm-gtags
   :ensure t
   :init
-  ;;; Enable helm-gtags-mode
+  ;; Enable helm-gtags-mode
   (add-hook 'c-mode-hook 'helm-gtags-mode)
   (add-hook 'java-mode-hook 'helm-gtags-mode)
   (add-hook 'c++-mode-hook 'helm-gtags-mode)
@@ -77,193 +69,215 @@
        (define-key helm-gtags-mode-map (kbd "C-c t p") 'helm-gtags-previous-history)
        (define-key helm-gtags-mode-map (kbd "C-c t n") 'helm-gtags-next-history)
        (define-key helm-gtags-mode-map (kbd "C-c t t") 'helm-gtags-pop-stack) )
-    )
-  )
+    ))
 
-;;; git-gutter
-(use-package git-gutter
+;; crux
+(use-package crux
   :ensure t
-  :init
-  (global-git-gutter-mode 1)
-  (git-gutter:linum-setup)
-  (global-set-key (kbd "C-x g p") 'git-gutter:previous-hunk)
-  (global-set-key (kbd "C-x g n") 'git-gutter:next-hunk)
-  (global-set-key (kbd "C-x g s") 'git-gutter:stage-hunk)
-  )
+  :bind
+  ("C-^" . crux-top-join-line)
+  ("C-a" . crux-move-beginning-of-line)
+  ("C-o" . crux-smart-open-line-above)
+  ("M-o" . crux-smart-open-line)
+  ("C-c d" . crux-duplicate-current-line-or-region)
+  ("C-c D" . crux-delete-file-and-buffer)
+  ("C-c k" . crux-kill-other-buffers)
+  ("C-x 7" . crux-swap-windows))
 
-;;; magit
+;; move-text
+(use-package move-text
+  :ensure t
+  :bind
+  ("M-g <up>" . move-text-up)
+  ("M-g <down>" . move-text-down))
+
+;; which-key
+(use-package which-key
+  :ensure t
+  :init (which-key-mode))
+
+;; flycheck
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+
+;; magit
 (use-package magit
   :ensure t
   :init
-  (global-set-key (kbd "C-x g v") 'magit-status)
-  (global-set-key (kbd "C-x g d") 'magit-diff-buffer-file)
-  (global-set-key (kbd "C-x g l") 'magit-log-buffer-file)
-  (global-set-key (kbd "C-x g a") 'magit-log-all)
-  )
+  (with-eval-after-load 'magit-files
+    (define-key magit-file-mode-map "\C-xg" nil))
+  :bind
+  ("C-x g v" . magit-status)
+  ("C-x g d" . magit-diff-buffer-file-popup)
+  ("C-x g l" . magit-log-buffer-file-popup)
+  ("C-x g a" . magit-log-all)
+  ("C-x g b" . magit-blame)
+  ("C-x g c" . magit-commit-popup))
 
-;;; switch-window
-(use-package switch-window
+;; git-gutter
+(use-package git-gutter
   :ensure t
-  :init
-  (global-set-key (kbd "C-x o") 'switch-window)
-  )
+  :init (global-git-gutter-mode 1)
+  :bind
+  ("C-x g p" . git-gutter:previous-hunk)
+  ("C-x g p" . git-gutter:previous-hunk)
+  ("C-x g n" . git-gutter:next-hunk)
+  ("C-x g s" . git-gutter:stage-hunk)
+  ("C-x g r" . git-gutter:revert-hunk))
+
+;; switch-window
+(use-package ace-window
+  :ensure t
+  :init (global-set-key (kbd "C-x o") 'ace-window))
+;; windmove
 (use-package windmove
   :bind
-  (("<f2> <right>" . windmove-right)
-   ("<f2> <left>" . windmove-left)
-   ("<f2> <up>" . windmove-up)
-   ("<f2> <down>" . windmove-down)
-   ))
+  ("C-x w <right>" . windmove-right) ("C-x w f" . windmove-right)
+  ("C-x w <left>" . windmove-left) ("C-x w b" . windmove-left)
+  ("C-x w <up>" . windmove-up) ("C-x w p" . windmove-up)
+  ("C-x w <down>" . windmove-down) ("C-x w n" . windmove-down))
+
 ;; multiple-cursors
 (use-package multiple-cursors
   :ensure t
+  :bind
+  ("C-c e a" . mc/mark-all-like-this)
+  ("C-c e n" . mc/mark-next-like-this)
+  ("C-c e p" . mc/mark-previous-like-this)
+  ("C-c e l" . mc/edit-lines)
+  ("C-c e r" . mc/mark-all-in-region))
+
+;; smartparens
+(use-package smartparens
+  :ensure t
   :init
-  (global-set-key (kbd "C-c e a") 'mc/mark-all-like-this)
-  (global-set-key (kbd "C-c e n") 'mc/mark-next-like-this)
-  (global-set-key (kbd "C-c e p") 'mc/mark-previous-like-this)
-  )
+  (smartparens-global-mode t)
+  (show-smartparens-global-mode t))
+;; highlight-parentheses
+(use-package highlight-parentheses
+  :ensure t
+  :init (global-highlight-parentheses-mode t))
+;; volatile-highlights
+(use-package volatile-highlights
+  :ensure t
+  :init (volatile-highlights-mode t))
 
-;;; hook
-(add-hook 'git-gutter:update-hooks 'magit-after-revert-hook)
-(add-hook 'git-gutter:update-hooks 'magit-not-reverted-hook)
+;; yasnippet
+(use-package yasnippet-snippets
+  :ensure t
+  :hook
+  ((sh-mode python-mode perl-mode php-mode
+            c-mode go-mode java-mode c++-mode
+            emacs-lisp-mode org-mode)
+   . yas-minor-mode))
+;; company
+(use-package company
+  :ensure t
+  :init (global-company-mode t))
 
-;;; c-mode, c++-mode, objc-mode, java-mode
-(defun my-c-mode-common-hook ()
-  (c-set-offset 'substatement-open 0)
-  (setq c++-tab-always-indent t)
-  (setq c-basic-offset 4)                  ;; Default is 2
-  (setq c-indent-level 4)                  ;; Default is 2
-  (setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60))
-  )
-(add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
+;; undo-tree
+(use-package undo-tree
+  :ensure t
+  :init (global-undo-tree-mode t))
 
+;; themes
+(use-package doom-themes
+  :ensure t
+  :init (load-theme 'doom-one t))
+;; smart-mode-line
+(use-package smart-mode-line
+  :ensure t
+  :init
+  (setq sml/theme 'respectful)
+  (setq sml/no-confirm-load-theme t)
+  (add-hook 'after-init-hook #'sml/setup))
 
+;; dashboard
+(use-package dashboard
+  :ensure t
+  :diminish dashboard-mode
+  :config
+  (setq dashboard-startup-banner nil)
+  (setq dashboard-items
+        '((recents . 10) (bookmarks . 5) (projects . 15)))
+  (dashboard-setup-startup-hook))
+
+;;; Options
+;; helm-ag
+(use-package helm-ag
+  :bind ("M-s d" . helm-ag))
+;; ace-jump-mode
+(use-package ace-jump-mode
+  :bind ("M-s a" . ace-jump-mode))
+;; which keybindings in my major?
+(use-package discover-my-major
+  :bind ("C-h M" . discover-my-major))
+
+;;: Hook
 ;; hide the minor modes
 (defvar hidden-minor-modes
-  '(flycheck-mode which-key-mode projectile-mode git-gutter-mode helm-mode))
+  '(global-whitespace-mode flycheck-mode which-key-mode projectile-mode git-gutter-mode helm-mode undo-tree-mode company-mode helm-gtags-mode smartparens-mode volatile-highlights-mode))
 (defun purge-minor-modes ()
   (interactive)
   (dolist (x hidden-minor-modes nil)
     (let ((trg (cdr (assoc x minor-mode-alist))))
-      (when trg
-        (setcar trg "")))))
+      (when trg (setcar trg "")))))
 (add-hook 'after-change-major-mode-hook 'purge-minor-modes)
+;; c hook
+(defun my-c-mode-common-hook ()
+  (c-set-offset 'substatement-open 0)
+  (setq c++-tab-always-indent t)
+  (setq c-basic-offset 4)
+  (setq c-indent-level 4))
+(add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
+;; mutt support.
+(setq auto-mode-alist (append '(("/tmp/mutt.*" . mail-mode)) auto-mode-alist))
 
-;;; customize
-(defalias 'yes-or-no-p 'y-or-n-p)
-(global-set-key (kbd "M-o") 'mode-line-other-buffer)
-(set-default-font "Inconsolata 11")
-
-;;; number key
-(global-set-key (kbd "M-[ A") 'previous-line)
-(global-set-key (kbd "M-[ B") 'next-line)
-(global-set-key (kbd "M-[ C") 'left-char)
-(global-set-key (kbd "M-[ D") 'right-char)
-(global-set-key (kbd "M-O x") 'previous-line)
-(global-set-key (kbd "M-O r") 'next-line)
-(global-set-key (kbd "M-O t") 'left-char)
-(global-set-key (kbd "M-O v") 'right-char)
-(global-set-key (kbd "M-O y") 'scroll-down-command)
-(global-set-key (kbd "M-O s") 'scroll-up-command)
-(global-set-key (kbd "M-O w") 'move-beginning-of-line)
-(global-set-key (kbd "M-O q") 'move-end-of-line)
-(global-set-key (kbd "M-O m") 'newline)
-
-;;; term
-(progn
-  (let ((x 2) (tkey ""))
-    (while (<= x 8)
-      ;; shift
-      (if (= x 2)
-          (setq tkey "S-"))
-      ;; alt
-      (if (= x 3)
-          (setq tkey "M-"))
-      ;; alt + shift
-      (if (= x 4)
-          (setq tkey "M-S-"))
-      ;; ctrl
-      (if (= x 5)
-          (setq tkey "C-"))
-      ;; ctrl + shift
-      (if (= x 6)
-          (setq tkey "C-S-"))
-      ;; ctrl + alt
-      (if (= x 7)
-          (setq tkey "C-M-"))
-      ;; ctrl + alt + shift
-      (if (= x 8)
-          (setq tkey "C-M-S-"))
-
-      ;; arrows
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d A" x)) (kbd (format "%s<up>" tkey)))
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d B" x)) (kbd (format "%s<down>" tkey)))
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d C" x)) (kbd (format "%s<right>" tkey)))
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d D" x)) (kbd (format "%s<left>" tkey)))
-      ;; home
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d H" x)) (kbd (format "%s<home>" tkey)))
-      ;; end
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d F" x)) (kbd (format "%s<end>" tkey)))
-      ;; page up
-      (define-key key-translation-map (kbd (format "M-[ 5 ; %d ~" x)) (kbd (format "%s<prior>" tkey)))
-      ;; page down
-      (define-key key-translation-map (kbd (format "M-[ 6 ; %d ~" x)) (kbd (format "%s<next>" tkey)))
-      ;; insert
-      (define-key key-translation-map (kbd (format "M-[ 2 ; %d ~" x)) (kbd (format "%s<delete>" tkey)))
-      ;; delete
-      (define-key key-translation-map (kbd (format "M-[ 3 ; %d ~" x)) (kbd (format "%s<delete>" tkey)))
-      ;; f1
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d P" x)) (kbd (format "%s<f1>" tkey)))
-      ;; f2
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d Q" x)) (kbd (format "%s<f2>" tkey)))
-      ;; f3
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d R" x)) (kbd (format "%s<f3>" tkey)))
-      ;; f4
-      (define-key key-translation-map (kbd (format "M-[ 1 ; %d S" x)) (kbd (format "%s<f4>" tkey)))
-      ;; f5
-      (define-key key-translation-map (kbd (format "M-[ 15 ; %d ~" x)) (kbd (format "%s<f5>" tkey)))
-      ;; f6
-      (define-key key-translation-map (kbd (format "M-[ 17 ; %d ~" x)) (kbd (format "%s<f6>" tkey)))
-      ;; f7
-      (define-key key-translation-map (kbd (format "M-[ 18 ; %d ~" x)) (kbd (format "%s<f7>" tkey)))
-      ;; f8
-      (define-key key-translation-map (kbd (format "M-[ 19 ; %d ~" x)) (kbd (format "%s<f8>" tkey)))
-      ;; f9
-      (define-key key-translation-map (kbd (format "M-[ 20 ; %d ~" x)) (kbd (format "%s<f9>" tkey)))
-      ;; f10
-      (define-key key-translation-map (kbd (format "M-[ 21 ; %d ~" x)) (kbd (format "%s<f10>" tkey)))
-      ;; f11
-      (define-key key-translation-map (kbd (format "M-[ 23 ; %d ~" x)) (kbd (format "%s<f11>" tkey)))
-      ;; f12
-      (define-key key-translation-map (kbd (format "M-[ 24 ; %d ~" x)) (kbd (format "%s<f12>" tkey)))
-      ;; f13
-      (define-key key-translation-map (kbd (format "M-[ 25 ; %d ~" x)) (kbd (format "%s<f13>" tkey)))
-      ;; f14
-      (define-key key-translation-map (kbd (format "M-[ 26 ; %d ~" x)) (kbd (format "%s<f14>" tkey)))
-      ;; f15
-      (define-key key-translation-map (kbd (format "M-[ 28 ; %d ~" x)) (kbd (format "%s<f15>" tkey)))
-      ;; f16
-      (define-key key-translation-map (kbd (format "M-[ 29 ; %d ~" x)) (kbd (format "%s<f16>" tkey)))
-      ;; f17
-      (define-key key-translation-map (kbd (format "M-[ 31 ; %d ~" x)) (kbd (format "%s<f17>" tkey)))
-      ;; f18
-      (define-key key-translation-map (kbd (format "M-[ 32 ; %d ~" x)) (kbd (format "%s<f18>" tkey)))
-      ;; f19
-      (define-key key-translation-map (kbd (format "M-[ 33 ; %d ~" x)) (kbd (format "%s<f19>" tkey)))
-      ;; f20
-      (define-key key-translation-map (kbd (format "M-[ 34 ; %d ~" x)) (kbd (format "%s<f20>" tkey)))
-      
-      (setq x (+ x 1))
-      ))
-  )
+;;; Customize
+;; defun
 (defun indent-buffer ()
   (interactive)
-  (save-excursion
-    (indent-region (point-min) (point-max) nil)))
-(global-set-key [f12] 'indent-buffer)
+  (save-excursion (indent-region (point-min) (point-max) nil))
+  (delete-trailing-whitespace))
+(defun yank-file-path ()
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode) default-directory
+                    (buffer-file-name))))
+    (when filename (kill-new filename)
+          (message (format "Copied %s" filename)))
+    ))
+(defun untabify-buffer ()
+  (interactive)
+  (save-excursion (untabify (point-min) (point-max) nil)))
+(defun split-window-vertically-last-buffer (prefix)
+  (interactive "p")
+  (split-window-vertically)
+  (other-window 1 nil)
+  (if (= prefix 1 ) (switch-to-next-buffer)))
+(defun split-window-horizontally-last-buffer (prefix)
+  (interactive "p")
+  (split-window-horizontally)
+  (other-window 1 nil)
+  (if (= prefix 1 ) (switch-to-next-buffer)))
 
-;; Mutt support.
-(setq auto-mode-alist (append '(("/tmp/mutt.*" . mail-mode)) auto-mode-alist))
+(defalias 'yes-or-no-p 'y-or-n-p)
+(global-set-key (kbd "C-x <up>") 'mode-line-other-buffer)
+(global-set-key (kbd "C-x m") 'compile)
+(global-set-key (kbd "M-s g") 'rgrep)
+(global-set-key (kbd "M-s s") 'isearch-forward-regexp)
+(global-set-key (kbd "M-s r") 'isearch-backward-regexp)
+(global-set-key (kbd "C-c r") 'revert-buffer)
+(global-set-key (kbd "C-M-_") 'dabbrev-completion)
+(global-set-key (kbd "C-x x ;") 'indent-buffer)
+(global-set-key (kbd "C-x x .") 'delete-trailing-whitespace)
+(global-set-key (kbd "C-x x t") 'untabify-buffer)
+(global-set-key (kbd "C-x x p") 'yank-file-path)
+(global-set-key (kbd "C-x x r") 'rename-buffer)
+(global-set-key (kbd "C-x 2") 'split-window-vertically-last-buffer)
+(global-set-key (kbd "C-x 3") 'split-window-horizontally-last-buffer)
+(global-set-key (kbd "C-x 4 C-v") 'scroll-other-window)
+(global-set-key (kbd "C-x 4 M-v") 'scroll-other-window-down)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -273,27 +287,33 @@
  '(Buffer-menu-use-header-line nil)
  '(backup-by-copying t)
  '(backup-directory-alist (quote (("." . "~/.emacs.d/backup"))))
+ '(browse-url-browser-function (quote eww-browse-url))
  '(column-number-mode t)
- '(custom-enabled-themes (quote (smart-mode-line-respectful deeper-blue)))
- '(custom-safe-themes
-   (quote
-    ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "c74e83f8aa4c78a121b52146eadb792c9facc5b1f02c917e3dbb454fca931223" "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" default)))
  '(default-input-method "vietnamese-telex")
  '(delete-old-versions 6)
- '(global-linum-mode t)
+ '(delete-selection-mode t)
+ '(enable-local-variables :all)
+ '(global-hl-line-mode t)
+ '(global-whitespace-mode t)
  '(helm-gtags-auto-update t)
  '(indent-tabs-mode nil)
  '(initial-scratch-message nil)
  '(keep-new-versions 2)
  '(menu-bar-mode nil)
- '(package-selected-packages
+ '(read-quoted-char-radix 16)
+ '(safe-local-variable-values
    (quote
-    (dockerfile-mode go-mode helm-gitlab gitlab kubernetes yaml-mode bitbucket helm which-key use-package switch-window nhexl-mode neotree multiple-cursors markdown-mode magit helm-projectile helm-gtags helm-ag git-gutter flycheck ac-php)))
+    ((eval setq default-directory
+           (locate-dominating-file buffer-file-name ".dir-locals.el")))))
  '(scroll-bar-mode nil)
+ '(show-trailing-whitespace t)
+ '(size-indication-mode t)
+ '(tab-stop-list (quote (4 8 12 16 20 24 28 32 36)))
  '(tab-width 4)
  '(tool-bar-mode nil)
  '(tramp-auto-save-directory "~/.emacs.d/backup")
- '(version-control t))
+ '(version-control t)
+ '(whitespace-style (quote (tabs empty indentation big-indent tab-mark))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -301,22 +321,23 @@
  ;; If there is more than one, they won't work right.
  )
 
-;; smart-mode-line
-(use-package smart-mode-line
-  :ensure t
-  :init
-  (smart-mode-line-enable)
-  (setq sml/no-confirm-load-theme t)
-  )
 ;; go-mode
-(use-package go-guru
-  :ensure t
-  )
-(use-package go-autocomplete
-  :ensure t
-  )
+(defun develop-go()
+  "Please install:
+   go get -u golang.org/x/tools/cmd/...
+   go get -u golang.org/x/tools/cmd/goimports
+   go get -u golang.org/x/tools/cmd/guru
+   go get -u github.com/rogpeppe/godef/...
+   go get -u github.com/nsf/gocode
+   go get -u github.com/dougm/goflymake"
+  (interactive)
+  (use-package go-autocomplete
+    :ensure t)
+  (use-package go-guru
+    :after (go-autocomplete)
+    :ensure t))
 (use-package go-projectile
-  :ensure t
+  :defer t
   :init
   (defun my-switch-project-hook ()
     (go-set-project))
@@ -324,32 +345,26 @@
   (defun my-go-mode-hook ()
     (add-hook 'before-save-hook 'gofmt-before-save) ; gofmt before every save
     (setq gofmt-command "goimports")
-    (go-guru-hl-identifier-mode)                    ; highlight identifiers  
+    (go-guru-hl-identifier-mode)                    ; highlight identifiers
     (local-set-key (kbd "M-.") 'godef-jump)
-    (local-set-key (kbd "M-*") 'pop-tag-mark)
+    (local-set-key (kbd "M-,") 'pop-tag-mark)
     (auto-complete-mode 1))                         ; Enable auto-complete mode
   (add-hook 'go-mode-hook 'my-go-mode-hook)
   (with-eval-after-load 'go-mode
-    (require 'go-autocomplete))
-  )
-;;; python-mode
+    (require 'go-autocomplete)))
+;; python-mode
+(defun develop-python()
+  (interactive)
+  (package-install 'python-mode)
+  (package-install 'jedi))
 (use-package jedi
-  :ensure t
+  :defer t
   :init
   (defvar jedi-config:use-system-python nil)
   (defvar jedi-config:with-virtualenv nil)
   (defvar jedi-config:vcs-root-sentinel ".git")
   (defvar jedi-config:python-module-sentinel "__init__.py")
-  
-  (defun get-project-root (buf repo-file &optional init-file)
-    "Just uses the vc-find-root function to figure out the project root.
-       Won't always work for some directory layouts."
-    (let* ((buf-dir (expand-file-name (file-name-directory (buffer-file-name buf))))
-           (project-root (vc-find-root buf-dir repo-file)))
-      (if project-root
-          (expand-file-name project-root)
-        nil)))
-  
+
   (defun get-project-root-with-file (buf repo-file &optional init-file)
     "Guesses that the python root is the less 'deep' of either:
          -- the root directory of the repository, or
@@ -369,16 +384,14 @@
        (base-dir ;; traverse until we reach the base
         (try-find-best-root (cdr base-dir) (cdr buffer-dir)
                             (append current (list (car buffer-dir)))))
-       
        (buffer-dir ;; try until we hit the current directory
         (let* ((next-dir (append current (list (car buffer-dir))))
                (file-file (concat (dir-list-to-path next-dir) "/" init-file)))
           (if (file-exists-p file-file)
               (dir-list-to-path current)
             (try-find-best-root nil (cdr buffer-dir) next-dir))))
-       
        (t nil)))
-    
+
     (let* ((buffer-dir (expand-file-name (file-name-directory (buffer-file-name buf))))
            (vc-root-dir (vc-find-root buffer-dir repo-file)))
       (if (and init-file vc-root-dir)
@@ -386,7 +399,8 @@
            (make-dir-list (expand-file-name vc-root-dir))
            (make-dir-list buffer-dir)
            '())
-        vc-root-dir))) ;; default to vc root if init file not given
+        vc-root-dir))
+    ) ;; default to vc root if init file not given
 
   ;; Set this variable to find project root
   (defvar jedi-config:find-root-function 'get-project-root-with-file)
@@ -403,13 +417,10 @@
       `(setq ,arg-list (append ,arg-list (list ,arg-name ,arg-value))))
     ;; and now define the args
     (let ((project-root (current-buffer-project-root)))
-
       (make-local-variable 'jedi:server-args)
-
       (when project-root
         (message (format "Adding system path: %s" project-root))
         (add-args jedi:server-args "--sys-path" project-root))
-
       (when jedi-config:with-virtualenv
         (message (format "Adding virtualenv: %s" jedi-config:with-virtualenv))
         (add-args jedi:server-args "--virtual-env" jedi-config:with-virtualenv))))
@@ -420,14 +431,6 @@
     (make-local-variable 'jedi:server-command)
     (set 'jedi:server-command
          (list (executable-find "python"))))
-
-  ;; Now hook everything up
-  ;; Hook up to autocomplete
-  (add-to-list 'ac-sources 'ac-source-jedi-direct)
-
-  ;; Enable Jedi setup on mode start
-  (add-hook 'python-mode-hook 'jedi:setup)
-
   ;; Buffer-specific server options
   (add-hook 'python-mode-hook
             'jedi-config:setup-server-args)
@@ -448,19 +451,14 @@
   (setq jedi:complete-on-dot t)
   ;; Use custom keybinds
   (add-hook 'python-mode-hook 'jedi-config:setup-keys)
-  (add-to-list 'ac-sources 'ac-source-jedi-direct)
+  ;; Enable Jedi setup on mode start
   (add-hook 'python-mode-hook 'jedi:setup))
 
 ;; php-mode
-(use-package ac-php
-  :ensure t
-  :init
-  (defun bs-php-mode-hook ()
-    (auto-complete-mode t)                 ;; «
-    (require 'ac-php)                      ;; «
-    (setq ac-sources  '(ac-source-php ))   ;; «
-    (yas-global-mode 1)                    ;; «
-    (setq php-template-compatibility nil))
-  (add-hook 'php-mode-hook 'bs-php-mode-hook)
-  )
+(defun develop-php()
+  (interactive)
+  (package-install 'php-mode)
+  (package-install 'company-php))
 
+(provide '.emacs)
+;;; .emacs ends here

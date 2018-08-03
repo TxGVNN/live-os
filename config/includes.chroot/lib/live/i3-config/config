@@ -119,6 +119,12 @@ bindsym $mod+Shift+0 move container to workspace $tag0
 
 # rename workspace
 bindsym $mod+t exec ~/.i3/bin/tags
+# [move to] new workspace
+bindsym $mod+i exec i3-input -F "workspace \"%s\"" -P 'Workspace: '
+bindsym $mod+Shift+i exec i3-input -F "move container to workspace \"%s\"" -P 'Move to workspace: '
+# mark container
+bindsym $mod+m exec i3-input -F 'mark %s' -P 'Mark name: '
+bindsym $mod+Shift+m exec i3-input -F '[con_mark=%s] focus' -P 'Go to mark: '
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
@@ -136,7 +142,65 @@ mode "(s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3" {
         bindsym Escape mode "default"
 }
 bindsym $mod+Shift+e mode "(s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3"
-#scratchpad
+
+# mouse mode
+mode "mouse" {
+        # normal
+        bindsym Up exec xdotool mousemove_relative -- 0 -15
+        bindsym Down exec xdotool mousemove_relative -- 0 15
+        bindsym Right exec xdotool mousemove_relative -- 15 0
+        bindsym Left exec xdotool mousemove_relative -- -15 0
+        bindsym w exec xdotool mousemove_relative -- 0 -15
+        bindsym x exec xdotool mousemove_relative -- 0 15
+        bindsym d exec xdotool mousemove_relative -- 15 0
+        bindsym a exec xdotool mousemove_relative -- -15 0
+        bindsym q exec xdotool mousemove_relative -- -15 -15
+        bindsym e exec xdotool mousemove_relative -- 15 -15
+        bindsym c exec xdotool mousemove_relative -- 15 15
+        bindsym z exec xdotool mousemove_relative -- -15 15
+        # faster(x2)
+        bindsym $mod+Up exec xdotool mousemove_relative -- 0 -30
+        bindsym $mod+Down exec xdotool mousemove_relative -- 0 30
+        bindsym $mod+Right exec xdotool mousemove_relative -- 30 0
+        bindsym $mod+Left exec xdotool mousemove_relative -- -30 0
+        bindsym $mod+w exec xdotool mousemove_relative -- 0 -30
+        bindsym $mod+x exec xdotool mousemove_relative -- 0 30
+        bindsym $mod+d exec xdotool mousemove_relative -- 30 0
+        bindsym $mod+a exec xdotool mousemove_relative -- -30 0
+        bindsym $mod+q exec xdotool mousemove_relative -- -30 -30
+        bindsym $mod+e exec xdotool mousemove_relative -- 30 -30
+        bindsym $mod+c exec xdotool mousemove_relative -- 30 30
+        bindsym $mod+z exec xdotool mousemove_relative -- -30 30
+        # slower (1/3 normal)
+        bindsym Control+Up exec xdotool mousemove_relative -- 0 -5
+        bindsym Control+Down exec xdotool mousemove_relative -- 0 5
+        bindsym Control+Right exec xdotool mousemove_relative -- 5 0
+        bindsym Control+Left exec xdotool mousemove_relative -- -5 0
+        bindsym Control+w exec xdotool mousemove_relative -- 0 -5
+        bindsym Control+x exec xdotool mousemove_relative -- 0 5
+        bindsym Control+d exec xdotool mousemove_relative -- 5 0
+        bindsym Control+a exec xdotool mousemove_relative -- -5 0
+        bindsym Control+q exec xdotool mousemove_relative -- -5 -5
+        bindsym Control+e exec xdotool mousemove_relative -- 5 -5
+        bindsym Control+c exec xdotool mousemove_relative -- 5 5
+        bindsym Control+z exec xdotool mousemove_relative -- -5 5
+        # click
+        bindsym s exec xdotool click 2 # middle
+        bindsym k exec xdotool click 3 # right
+        bindsym j exec xdotool click 1 # left
+        bindsym h exec xdotool click 4 # wheel up
+        bindsym l exec xdotool click 5 # wheel down
+        bindsym Shift+j exec xdotool click 1 # shift + left = mark
+        bindsym Control+j exec xdotool click 1 # control + left
+        bindsym Control+h exec xdotool click 4 # control + wheel up = zoom
+        bindsym Control+l exec xdotool click 5 # control + wheel down = zoom
+        # exit mode
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+}
+bindsym $mod+g mode "mouse"
+
+# scratchpad
 bindsym $mod+minus scratchpad show
 bindsym $mod+Shift+minus move scratchpad
 # lock screen
@@ -158,11 +222,10 @@ mode "resize" {
         bindsym Return mode "default"
         bindsym Escape mode "default"
 }
-
 bindsym $mod+r mode "resize"
 
-# Start i3bar to display a workspace bar (plus the system information i3status
-# finds out, if available)
+# Start i3bar to display a workspace bar
+bindsym $mod+b bar mode toggle
 bar {
 	i3bar_command /usr/bin/i3bar
 #	status_command i3status -c ~/.i3/i3status.conf
@@ -202,8 +265,8 @@ client.focused_inactive     $bg     $bg         $ac     $id
 
 # start application
 exec --no-startup-id feh --bg-fill ~/.i3/background.bmp
-#exec --no-startup-id conky -d -c ~/.i3/conkybg
-exec --no-startup-id conky -d -c ~/.i3/conky-left
+exec --no-startup-id conky -d -c ~/.i3/conkybg
+#exec --no-startup-id conky -d -c ~/.i3/conky-left
 #exec --no-startup-id conky -d -c ~/.i3/conky-bottom
 exec --no-startup-id ~/.i3/bin/xinput-fix
 exec --no-startup-id dunst
@@ -227,17 +290,17 @@ bindsym XF86MonBrightnessUp exec xbacklight -inc 10 # increase screen brightness
 bindsym XF86MonBrightnessDown exec xbacklight -dec 10 # decrease screen brightness
 
 # Touchpad controls
-bindsym XF86Sleep exec systemctl suspend
-# shortcut scratchpad
-bindsym $mod+F1 [title="^F1$"] exec ~/.i3/bin/fn 1
-bindsym $mod+F12 [title="^F12$"] exec ~/.i3/bin/fn 12
+bindsym XF86Sleep exec ~/.i3/bin/i3lock.sh && systemctl suspend
+# Toggle fastly terminal
+bindsym $mod+F1 exec ~/.i3/bin/fn 1
+bindsym $mod+F12 exec ~/.i3/bin/fn 12
 # Media player controls
 bindsym XF86AudioPlay exec clementine --play-pause
 bindsym XF86AudioPause exec clementine --play-pause
 bindsym XF86AudioNext exec clementine --next
 bindsym XF86AudioPrev exec  clementine --previous
 
-## shortcut 
+## shortcut
 #emacs
 bindsym $mod+Mod1+i exec emacs
 #keepassx
@@ -245,8 +308,8 @@ bindsym $mod+Mod1+k exec keepassx
 #email
 bindsym $mod+Mod1+e exec thunderbird
 #browser
-bindsym $mod+Mod1+b exec firefox
-bindsym $mod+Mod1+Shift+b exec firefox --private-window
+bindsym $mod+Mod1+b exec firefox -P default
+bindsym $mod+Mod1+Shift+b exec firefox -P default --private-window
 bindsym $mod+Mod1+g exec chromium --profile-directory="Default"
 bindsym $mod+Mod1+Shift+g exec chromium --profile-directory="Default" --incognito
 #paint
