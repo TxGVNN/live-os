@@ -17,7 +17,7 @@
 
 *** Requried
     #+BEGIN_SRC
-    apt-get install live-build live-config
+    apt-get install live-build
     #+END_SRC
 *** More info
     #+BEGIN_SRC
