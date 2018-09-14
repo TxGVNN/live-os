@@ -9,6 +9,7 @@
 ** Features
    - i3 window manager
    - [[https://github.com/TxGVNN/i3-config][My i3-config]]
+   - [[https://github.com/TxGVNN/dots][My dots]]
 
 ** Build
    #+BEGIN_SRC shell
