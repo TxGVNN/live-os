@@ -11,6 +11,7 @@ feh
 firefox-esr
 fonts-font-awesome
 fonts-inconsolata
+gawk
 git
 global
 gparted
@@ -39,3 +40,4 @@ xbacklight
 xdotool
 xinit
 xinput
+xsel
