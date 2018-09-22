@@ -6,6 +6,7 @@ cryptsetup
 curl
 debootstrap
 dirmngr
+dirmngr
 emacs25-lucid
 feh
 firefox-esr
@@ -14,7 +15,9 @@ fonts-inconsolata
 gawk
 git
 global
+gnupg2
 gparted
+gpgsm
 htop
 i3
 ibus-unikey
