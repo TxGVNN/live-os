@@ -263,6 +263,10 @@
   "Convert all tabs in buffer to multiple spaces."
   (interactive)
   (save-excursion (untabify (point-min) (point-max) nil)))
+(defun tabify-buffer ()
+  "Convert 4 spaces in buffer to tab."
+  (interactive)
+  (save-excursion (tabify (point-min) (point-max) nil)))
 (defun split-window-vertically-last-buffer (prefix)
   "Split window vertically.
 - PREFIX: default(1) is switch to last buffer"
@@ -283,8 +287,8 @@
   (let ((filename (if (equal major-mode 'dired-mode) default-directory
                     (buffer-file-name))))
     (when filename (async-shell-command
-                    (format "curl --progress-bar -H 'Max-Downloads: %d' --upload-file %s https://transfer.sh" downloads filename))))
-  )
+                    (format "curl --progress-bar -H 'Max-Downloads: %d' --upload-file %s https://transfer.sh"
+                            downloads filename)))))
 (defun copy-to-clipboard ()
   "Copy to clipboard."
   (interactive)
@@ -313,6 +317,12 @@
         (call-interactively 'interaction-log-mode))
     (view-lossage))
   )
+(defun sudo-save ()
+  "Save buffer with sudo."
+  (interactive)
+  (if (not buffer-file-name)
+      (write-file (concat "/sudo::" (helm-read-file-name "sudo-save to:")))
+    (write-file (concat "/sudo::" buffer-file-name))))
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (global-set-key (kbd "C-x j") 'mode-line-other-buffer)
@@ -329,8 +339,10 @@
 (global-set-key (kbd "C-x x r") 'revert-buffer)
 (global-set-key (kbd "C-x x s") 'share-buffer-online)
 (global-set-key (kbd "C-x x t") 'untabify-buffer)
+(global-set-key (kbd "C-x x T") 'tabify-buffer)
 (global-set-key (kbd "C-x x M-w") 'copy-to-clipboard)
 (global-set-key (kbd "C-x x C-y") 'paste-from-clipboard)
+(global-set-key (kbd "C-x x C-s") 'sudo-save)
 (global-set-key (kbd "C-x 2") 'split-window-vertically-last-buffer)
 (global-set-key (kbd "C-x 3") 'split-window-horizontally-last-buffer)
 (global-set-key (kbd "C-x 4 C-v") 'scroll-other-window)
@@ -375,7 +387,7 @@
  '(tab-stop-list (quote (4 8 12 16 20 24 28 32 36)))
  '(tab-width 4)
  '(tool-bar-mode nil)
- '(tramp-auto-save-directory "~/.emacs.d/backup")
+ '(tramp-auto-save-directory "~/.emacs.d/backup" nil (tramp))
  '(version-control t)
  '(whitespace-style (quote (tabs empty indentation big-indent tab-mark))))
 (custom-set-faces
