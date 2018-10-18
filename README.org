@@ -13,7 +13,7 @@
 
 ** Build
    #+BEGIN_SRC shell
-   lb build
+   make build
    #+END_SRC
 
 *** Requried
