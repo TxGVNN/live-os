@@ -28,6 +28,7 @@ keepassx
 mpv
 mutt
 openvpn
+pciutils
 policykit-1
 ranger
 redshift
@@ -42,6 +43,7 @@ tmux
 tor
 vim
 w3m
+weechat
 wicd
 wireshark
 xbacklight
