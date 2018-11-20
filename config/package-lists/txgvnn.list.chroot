@@ -17,6 +17,7 @@ fonts-inconsolata
 gawk
 git
 global
+gnome-screenshot
 gnupg2
 gparted
 gpgsm
@@ -25,12 +26,14 @@ i3
 i3lock
 ibus-unikey
 keepassx
+libnotify-bin
 mpv
 mutt
 openvpn
 pciutils
 policykit-1
 ranger
+recordmydesktop
 redshift
 rxvt-unicode-256color
 screen
