@@ -1,5 +1,7 @@
 # TxGVNN <txgvnn@gmail.com>
-# i3 version 4.13 (2016-11-08)
+# Name the wordspaces
+# xprop to check window
+# xmodmap [ --pke ] view keymap
 set $tag1 
 set $tag2 
 set $tag3 
@@ -92,6 +94,9 @@ bindsym $mod+z focus child
 bindcode $mod+21 [urgent=latest] focus
 # focus follow mouse
 focus_follows_mouse no
+# scratchpad
+bindsym $mod+minus scratchpad show
+bindsym $mod+Shift+minus move scratchpad
 
 # switch to workspace
 bindsym $mod+1 workspace number 1 $tag1
@@ -132,7 +137,8 @@ bindsym $mod+Shift+r restart
 # exit i3 (logs you out of your X session)
 #bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
 #bindsym $mod+Shift+e exit
-mode "(s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3" {
+mode "(l)ock (s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3" {
+        bindsym l exec ~/.i3/bin/i3lock.sh; mode "default"
         bindsym s exec ~/.i3/bin/i3lock.sh && systemctl suspend; mode "default"
         bindsym h exec ~/.i3/bin/i3lock.sh && systemctl hibernate; mode "default"
         bindsym p exec systemctl poweroff; mode "default"
@@ -141,7 +147,7 @@ mode "(s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3" {
         bindsym Return mode "default"
         bindsym Escape mode "default"
 }
-bindsym $mod+Shift+e mode "(s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3"
+bindsym $mod+Shift+e mode "(l)ock (s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3"
 
 # mouse mode
 mode "mouse" {
@@ -200,11 +206,6 @@ mode "mouse" {
 }
 bindsym $mod+g mode "mouse"
 
-# scratchpad
-bindsym $mod+minus scratchpad show
-bindsym $mod+Shift+minus move scratchpad
-# lock screen
-bindsym $mod+Mod1+l exec ~/.i3/bin/i3lock.sh
 # resize window (you can also use the mouse for that)
 mode "resize" {
         bindsym j resize shrink width 5 px or 5 ppt
@@ -227,21 +228,25 @@ bindsym $mod+r mode "resize"
 # Start i3bar to display a workspace bar
 bindsym $mod+b bar mode toggle
 bar {
-	i3bar_command /usr/bin/i3bar
-#	status_command i3status -c ~/.i3/i3status.conf
-	status_command ~/.i3/bin/conky-i3bar
-	font pango:DejaVu Sans Mono, FontAwesome 8
-	tray_output primary
-	position top
-	colors {
-		background #202020
-		separator #202020
-		statusline #ffffff
-		focused_workspace  #AAAAAA #000000 #DDDDDD
-		active_workspace   #000000 #808080 #336633
-		inactive_workspace #606060 #808080 #000000
-		urgent_workspace  #AAAAAA #e60000 #ffffff
-    }
+        i3bar_command /usr/bin/i3bar
+        # i3bar_command ~/.i3/lemonbar/i3_lemonbar.sh
+        # status_command i3status -c ~/.i3/i3status.conf
+        status_command ~/.i3/bin/conky-i3bar
+        font pango:DejaVu Sans Mono, FontAwesome 8
+        tray_output primary
+        position top
+        # font pango:Terminus 8
+        colors {
+            background #202020
+            separator #202020
+            statusline #ffffff
+            focused_workspace  #AAAAAA #000000 #DDDDDD
+            active_workspace   #000000 #808080 #336633
+            inactive_workspace #606060 #808080 #000000
+            urgent_workspace   #AAAAAA #e60000 #ffffff
+        }
+        # bindsym button1 nop
+        # bindsym button2 nop
 }
 # define color
 set $bg     #2c2c2e
@@ -265,20 +270,18 @@ client.focused_inactive     $bg     $bg         $ac     $id
 
 # start application
 exec --no-startup-id feh --bg-fill ~/.i3/background.bmp
-exec --no-startup-id conky -d -c ~/.i3/conkybg
-#exec --no-startup-id conky -d -c ~/.i3/conky-left
+exec --no-startup-id conky -d -c ~/.i3/conky-right
+exec --no-startup-id conky -d -c ~/.i3/conky-left
 #exec --no-startup-id conky -d -c ~/.i3/conky-bottom
 exec --no-startup-id ~/.i3/bin/xinput-fix
 exec --no-startup-id dunst
 exec --no-startup-id ibus-daemon --xim -d -r
-#exec --no-startup-id xautolock -time 5 -locker '~/.i3/bin/i3lock.sh'
+exec --no-startup-id xautolock -time 5 -locker '~/.i3/bin/i3lock.sh'
 exec --no-startup-id redshift
 
-# Assign workspace
-assign [class="Keepassx"] $tag0
-
-# Screenshot
-bindsym Print exec scrot 'scrot_%Y-%m-%d-%T_$wx$h.png' -e 'mv $f ~/Pictures/'
+# lock screen
+bindsym XF86ScreenSaver exec ~/.i3/bin/i3lock.sh
+bindsym $mod+Mod1+l exec ~/.i3/bin/i3lock.sh
 
 # Pulse Audio controls
 bindsym XF86AudioRaiseVolume exec --no-startup-id amixer -q sset Master 3%+
@@ -291,29 +294,37 @@ bindsym XF86MonBrightnessDown exec xbacklight -dec 10 # decrease screen brightne
 
 # Touchpad controls
 bindsym XF86Sleep exec ~/.i3/bin/i3lock.sh && systemctl suspend
+
+# Screenshot
+bindsym Print exec scrot 'scrot_%Y-%m-%d-%T_$wx$h.png' -e 'mv $f ~/Pictures/'
+
 # Toggle fastly terminal
 bindsym $mod+F1 exec ~/.i3/bin/fn 1
 bindsym $mod+F12 exec ~/.i3/bin/fn 12
 # Media player controls
-bindsym XF86AudioPlay exec clementine --play-pause
-bindsym XF86AudioPause exec clementine --play-pause
-bindsym XF86AudioNext exec clementine --next
-bindsym XF86AudioPrev exec  clementine --previous
+bindsym XF86AudioPlay exec mpc toggle
+bindsym XF86AudioPause exec mpc pause
+bindsym XF86AudioNext exec mpc next
+bindsym XF86AudioPrev exec mpc prev
+
+bindsym XF86Launch1 exec xset dpms force off
 
 ## shortcut
-#emacs
+# emacs
 bindsym $mod+Mod1+i exec emacs
-#keepassx
+# keepassx
 bindsym $mod+Mod1+k exec keepassx
-#email
+# email
 bindsym $mod+Mod1+e exec thunderbird
-#browser
+# browser
 bindsym $mod+Mod1+b exec firefox -P default
 bindsym $mod+Mod1+Shift+b exec firefox -P default --private-window
-bindsym $mod+Mod1+g exec chromium --profile-directory="Default"
-bindsym $mod+Mod1+Shift+g exec chromium --profile-directory="Default" --incognito
-#paint
+bindsym $mod+Mod1+g exec chromium --temp-profile
+bindsym $mod+Mod1+Shift+g exec chromium --temp-profile --incognito
+# gimp
 bindsym $mod+Mod1+p exec gimp
-#explore
+# wicd
+bindsym $mod+Mod1+w exec wicd-client
+# explore
 bindsym $mod+Mod1+r exec /usr/bin/rxvt -e ranger
 exec i3-msg workspace 1 $tag1

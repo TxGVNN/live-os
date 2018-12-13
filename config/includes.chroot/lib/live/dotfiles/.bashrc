@@ -79,18 +79,18 @@ if [ -x /usr/bin/dircolors ]; then
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
 
-    #alias grep='grep --color=auto'
-    #alias fgrep='fgrep --color=auto'
-    #alias egrep='egrep --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
 fi
 
-# colored GCC warnings and errors
-#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
 # some more ls aliases
-#alias ll='ls -l'
-#alias la='ls -A'
-#alias l='ls -CF'
+alias ll='ls -l'
+alias la='ls -A'
+alias l='ls -CF'
+alias rm='rm -v'
+alias ssh='ssh -v'
+alias mpv.no-video="mpv --no-video"
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -126,7 +126,7 @@ export GIT_PS1_SHOWDIRTYSTATE=true
 PS1="\n\[\e[0;${color}m\]\342\224\214\[\e[1;30m\](\[\e[0;${color}m\]\u\[\e[0;35m\]@\h\[\e[1;30m\])\$(if [[ \$? == 0 ]]; then echo \"\[\e[6;32m\]\342\224\200\"; else echo \"\[\e[6;31m\]\342\224\200\"; fi)\[\e[0m\]\[\e[1;30m\](\[\e[0;34m\]\w\[\e[1;30m\])\342\224\200(\[\e[0;33m\]\t\[\e[1;30m\]\[\e[1;30m\])\$(__git_ps1)\n\[\e[0;${color}m\]\342\224\224>\[\e[0m\]"
 
 function cdtmp(){
-    cd "$(mktemp -d -t ${USER}_$(date +%F@%R).XXX)" || exit 1
+    cd "$(mktemp -d -t ${USER}_$(date +%F_%H-%I)_XXX)" || exit 1
 }
 function lstmp(){
     ls /tmp/"$USER"*
@@ -188,16 +188,13 @@ function sshtmux(){
     ssh "$@" -v -t 'if tmux ls | grep gtx -q ; then tmux at -t gtx ;else tmux new -s gtx ;fi'
 }
 
-# Alias
-alias cd="cdenv"
-alias em="emacs -nw"
-# Export
-export HISTTIMEFORMAT="%F %T "
-## Check pseudoterminal or not?
+# Check pseudoterminal or not?
 export TERM=xterm-256color
 if [[ $(tty) != */dev/pts/* ]]; then
     export TERM=linux
 fi
+alias em='emacs -nw'
+# ibus
 export GTK_IM_MODULE=ibus
 export XMODIFIERS=@im=ibus
 export QT_IM_MODULE=ibus

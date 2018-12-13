@@ -23,8 +23,8 @@
   (setq helm-autoresize-max-height 0)
   (setq helm-autoresize-min-height 25)
   (add-to-list 'helm-sources-using-default-as-input 'helm-source-man-pages)
-  (helm-autoresize-mode 1)
-  (helm-mode 1)
+  (helm-autoresize-mode t)
+  (helm-mode t)
   :bind
   (("M-x" . helm-M-x)
    ("C-x C-f" . helm-find-files)
@@ -35,8 +35,7 @@
    :map helm-map
    ("<tab>" . helm-execute-persistent-action)
    ("C-i" . helm-execute-persistent-action)
-   ("C-z" . helm-select-action))
-  )
+   ("C-z" . helm-select-action)))
 ;; helm-projectile
 (use-package helm-projectile
   :ensure t
@@ -52,7 +51,7 @@
 ;; helm-gtags
 (use-package helm-gtags
   :ensure t
-  :init
+  :init (setq helm-gtags-auto-update t)
   ;; Enable helm-gtags-mode
   (add-hook 'c-mode-hook 'helm-gtags-mode)
   (add-hook 'java-mode-hook 'helm-gtags-mode)
@@ -89,6 +88,11 @@
   ("C-h RET" . crux-find-user-init-file)
   ("C-x 7" . crux-swap-windows))
 
+;; vlf - view large files
+(use-package vlf
+  :ensure t
+  :config (require 'vlf-setup))
+
 ;; move-text
 (use-package move-text
   :ensure t
@@ -109,23 +113,21 @@
 ;; magit
 (use-package magit
   :ensure t
-  :init
-  (with-eval-after-load 'magit-files
-    (define-key magit-file-mode-map (kbd "C-x g") nil))
+  :config
+  (define-key magit-file-mode-map (kbd "C-x g") nil)
   :bind
   ("C-x g v" . magit-status)
   ("C-x g d" . magit-diff-buffer-file-popup)
   ("C-x g l" . magit-log-buffer-file-popup)
   ("C-x g a" . magit-log-all)
-  ("C-x g b" . magit-blame)
+  ("C-x g b" . magit-blame-popup)
   ("C-x g c" . magit-commit-popup))
 
 ;; git-gutter
 (use-package git-gutter
   :ensure t
-  :init (global-git-gutter-mode 1)
+  :init (global-git-gutter-mode t)
   :bind
-  ("C-x g p" . git-gutter:previous-hunk)
   ("C-x g p" . git-gutter:previous-hunk)
   ("C-x g n" . git-gutter:next-hunk)
   ("C-x g s" . git-gutter:stage-hunk)
@@ -135,13 +137,13 @@
 (use-package ace-window
   :ensure t
   :init (global-set-key (kbd "C-x o") 'ace-window))
-;; windmove
-(use-package windmove
-  :bind
-  ("C-x <right>" . windmove-right) ("C-x w f" . windmove-right)
-  ("C-x <left>" . windmove-left) ("C-x w b" . windmove-left)
-  ("C-x <up>" . windmove-up) ("C-x w p" . windmove-up)
-  ("C-x <down>" . windmove-down) ("C-x w n" . windmove-down))
+;; layout
+(use-package perspective
+  :ensure t
+  :init
+  (setq persp-mode-prefix-key (kbd "C-z"))
+  (setq persp-initial-frame-name "0")
+  :config (persp-mode t))
 
 ;; multiple-cursors
 (use-package multiple-cursors
@@ -156,9 +158,7 @@
 ;; smartparens
 (use-package smartparens
   :ensure t
-  :init
-  (smartparens-global-mode t)
-  (show-smartparens-global-mode t))
+  :init (smartparens-global-mode t))
 ;; highlight-parentheses
 (use-package highlight-parentheses
   :ensure t
@@ -167,19 +167,34 @@
 (use-package volatile-highlights
   :ensure t
   :init (volatile-highlights-mode t))
+;; anzu
+(use-package anzu
+  :ensure t
+  :init (global-anzu-mode t))
 
 ;; yasnippet
 (use-package yasnippet-snippets
   :ensure t
+  :config
+  (define-key yas-minor-mode-map [(tab)] nil)
+  (define-key yas-minor-mode-map (kbd "TAB") nil)
+  (define-key yas-minor-mode-map (kbd "M-]") yas-maybe-expand)
   :hook
-  ((sh-mode python-mode perl-mode php-mode
-            c-mode go-mode java-mode c++-mode
-            emacs-lisp-mode org-mode)
+  ((sh-mode emacs-lisp-mode python-mode perl-mode php-mode
+            makefile-mode c-mode go-mode java-mode c++-mode
+            org-mode markdown-mode terraform-mode)
    . yas-minor-mode))
 ;; company
 (use-package company
   :ensure t
-  :init (global-company-mode t))
+  :init (global-company-mode t)
+  :config
+  (defun company-mode/backend-with-yas (backend)
+    (if (and (listp backend) (member 'company-yasnippet backend)) backend
+      (append (if (consp backend) backend (list backend))
+              '(:with company-yasnippet))))
+  (setq company-backends (mapcar #'company-mode/backend-with-yas company-backends))
+  :bind ("M-]" . company-complete))
 
 ;; undo-tree
 (use-package undo-tree
@@ -193,13 +208,21 @@
 (use-package doom-themes
   :ensure t
   :init (load-theme 'doom-one t))
-;; smart-mode-line
-(use-package smart-mode-line
+;; modeline
+(use-package doom-modeline
   :ensure t
   :init
-  (setq sml/theme 'respectful)
-  (setq sml/no-confirm-load-theme t)
-  (add-hook 'after-init-hook #'sml/setup))
+  (setq doom-modeline-buffer-file-name-style 'truncate-with-project)
+  (setq doom-modeline-minor-modes t)
+  (setq doom-modeline-lsp nil)
+  (setq doom-modeline-icon nil)
+  (setq doom-modeline-major-mode-icon nil)
+  :config
+  (doom-modeline-def-modeline 'slim
+    '(bar workspace-number window-number " " buffer-info remote-host buffer-position " " selection-info)
+    '(global persp-name minor-modes input-method buffer-encoding major-mode process vcs flycheck))
+  (doom-modeline-set-modeline 'slim t)
+  :hook (after-init . doom-modeline-init))
 
 ;;; Options
 ;; helm-ag
@@ -228,21 +251,13 @@
 ;;: Hook
 ;; hide the minor modes
 (defvar hidden-minor-modes
-  '(global-whitespace-mode flycheck-mode which-key-mode projectile-mode git-gutter-mode helm-mode undo-tree-mode company-mode helm-gtags-mode smartparens-mode volatile-highlights-mode))
+  '(global-whitespace-mode flycheck-mode which-key-mode projectile-mode git-gutter-mode helm-mode undo-tree-mode company-mode highlight-parentheses-mode smartparens-mode volatile-highlights-mode anzu-mode))
 (defun purge-minor-modes ()
+  "Dont show on modeline."
   (dolist (x hidden-minor-modes nil)
     (let ((trg (cdr (assoc x minor-mode-alist))))
       (when trg (setcar trg "")))))
 (add-hook 'after-change-major-mode-hook 'purge-minor-modes)
-;; c hook
-(defun my-c-mode-common-hook ()
-  (c-set-offset 'substatement-open 0)
-  (setq c++-tab-always-indent t)
-  (setq c-basic-offset 4)
-  (setq c-indent-level 4))
-(add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
-;; mutt support.
-(setq auto-mode-alist (append '(("/tmp/mutt.*" . mail-mode)) auto-mode-alist))
 
 ;;; Customize
 ;; defun
@@ -257,8 +272,7 @@
   (let ((filename (if (equal major-mode 'dired-mode) default-directory
                     (buffer-file-name))))
     (when filename (kill-new filename)
-          (message (format "Yanked %s" filename)))
-    ))
+          (message (format "Yanked %s" filename)))))
 (defun untabify-buffer ()
   "Convert all tabs in buffer to multiple spaces."
   (interactive)
@@ -282,7 +296,8 @@
   (other-window 1 nil)
   (if (= prefix 1 ) (switch-to-next-buffer)))
 (defun share-buffer-online (downloads)
-  "Share buffer to online."
+  "Share buffer to online.
+- DOWNLOADS: The max-downloads"
   (interactive "p")
   (let ((filename (if (equal major-mode 'dired-mode) default-directory
                     (buffer-file-name))))
@@ -300,8 +315,7 @@
           (shell-command-on-region (region-beginning) (region-end) "xsel -i -b")
           (message "Yanked region to clipboard!")
           (deactivate-mark))
-      (message "No region active; can't yank to clipboard!")))
-  )
+      (message "No region active; can't yank to clipboard!"))))
 (defun paste-from-clipboard ()
   "Paste from clipboard."
   (interactive)
@@ -315,8 +329,7 @@
       (progn
         (load-library "interaction-log")
         (call-interactively 'interaction-log-mode))
-    (view-lossage))
-  )
+    (view-lossage)))
 (defun sudo-save ()
   "Save buffer with sudo."
   (interactive)
@@ -335,6 +348,7 @@
 (global-set-key (kbd "C-x x .") 'delete-trailing-whitespace)
 (global-set-key (kbd "C-x x ;") 'indent-buffer)
 (global-set-key (kbd "C-x x b") 'rename-buffer)
+(global-set-key (kbd "C-x x g") 'org-agenda)
 (global-set-key (kbd "C-x x p") 'yank-file-path)
 (global-set-key (kbd "C-x x r") 'revert-buffer)
 (global-set-key (kbd "C-x x s") 'share-buffer-online)
@@ -348,9 +362,6 @@
 (global-set-key (kbd "C-x 4 C-v") 'scroll-other-window)
 (global-set-key (kbd "C-x 4 M-v") 'scroll-other-window-down)
 (global-set-key (kbd "C-h l") 'show-lossage)
-(global-set-key (kbd "C-x w <right>") 'next-buffer)
-(global-set-key (kbd "C-x w <left>") 'previous-buffer)
-(global-unset-key (kbd "C-z"))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -358,24 +369,31 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(Buffer-menu-use-header-line nil)
+ '(auto-revert-check-vc-info t)
  '(backup-by-copying t)
  '(backup-directory-alist (quote (("." . "~/.emacs.d/backup"))))
  '(browse-url-browser-function (quote eww-browse-url))
  '(column-number-mode t)
  '(default-input-method "vietnamese-telex")
- '(delete-old-versions 6)
+ '(delete-old-versions t)
  '(delete-selection-mode t)
  '(enable-local-variables :all)
  '(global-hl-line-mode t)
  '(global-whitespace-mode t)
- '(helm-gtags-auto-update t)
  '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
  '(initial-scratch-message nil)
- '(keep-new-versions 2)
+ '(kept-new-versions 6)
  '(menu-bar-mode nil)
- '(org-todo-keyword-faces (quote (("CANCELED" . "#ff0000"))))
- '(org-todo-keywords (quote ((sequence "TODO" "CANCELED" "DONE"))))
+ '(org-agenda-files (quote ("~/.gxt/org")))
+ '(org-enforce-todo-dependencies t)
+ '(org-todo-keywords
+   (quote
+    ((sequence "TODO(t)" "|" "DONE(d)")
+     (sequence "WAITING(w)" "|" "CANCELED(c)"))))
+ '(package-selected-packages
+   (quote
+    (ztree yasnippet-snippets which-key volatile-highlights vlf use-package undo-tree smtpmail-multi smartparens python-mode perspective multiple-cursors move-text md4rd magit lua-mode lsp-java json-mode interaction-log iedit highlight-parentheses helm-swoop helm-projectile helm-gtags helm-ebdb helm-ag google-translate go-projectile git-gutter flycheck doom-themes doom-modeline dockerfile-mode docker-compose-mode discover-my-major csv-mode crux company-terraform company-php company-lsp company-jedi company-go anzu ansible ace-window ace-jump-mode 2048-game)))
  '(read-quoted-char-radix 16)
  '(recentf-mode t)
  '(safe-local-variable-values
@@ -383,6 +401,7 @@
     ((eval setq default-directory
            (locate-dominating-file buffer-file-name ".dir-locals.el")))))
  '(scroll-bar-mode nil)
+ '(show-paren-mode t)
  '(show-trailing-whitespace t)
  '(tab-stop-list (quote (4 8 12 16 20 24 28 32 36)))
  '(tab-width 4)
@@ -397,6 +416,29 @@
  ;; If there is more than one, they won't work right.
  )
 
+;; .emacs
+(defun develop-dot()
+  "Update 'user-init-file - .emacs."
+  (interactive)
+  (let (upstream)
+    (setq upstream (make-temp-file ".emacs"))
+    (message upstream)
+    (url-copy-file "https://raw.githubusercontent.com/TxGVNN/dots/master/.emacs" upstream t)
+    (diff user-init-file upstream)
+    (other-window 1 nil)
+    (message "Override %s by %s to update" user-init-file upstream)))
+
+;; c-mode
+(defun my-c-mode-common-hook ()
+  (c-set-offset 'substatement-open 0)
+  (setq c++-tab-always-indent t)
+  (setq c-basic-offset 4)
+  (setq c-indent-level 4))
+(add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
+
+;; mutt support.
+(setq auto-mode-alist (append '(("/tmp/mutt.*" . mail-mode)) auto-mode-alist))
+
 ;; go-mode
 (defun develop-go()
   "Go develoment.
@@ -408,11 +450,8 @@ Please install:
    go get -u github.com/nsf/gocode
    go get -u github.com/dougm/goflymake"
   (interactive)
-  (use-package go-autocomplete
-    :ensure t)
-  (use-package go-guru
-    :after (go-autocomplete)
-    :ensure t))
+  (package-install 'go-projectile)
+  (package-install 'company-go))
 (use-package go-projectile
   :defer t
   :init
@@ -422,18 +461,16 @@ Please install:
     (go-guru-hl-identifier-mode)                    ; highlight identifiers
     (local-set-key (kbd "M-.") 'godef-jump)
     (local-set-key (kbd "M-,") 'pop-tag-mark)
-    (auto-complete-mode 1))                         ; Enable auto-complete mode
-  (add-hook 'go-mode-hook 'my-go-mode-hook)
-  (with-eval-after-load 'go-mode
-    (require 'go-autocomplete)))
+    (add-to-list 'company-backends '(company-go :with company-yasnippet)))
+  (add-hook 'go-mode-hook 'my-go-mode-hook))
 
 ;; python-mode
 (defun develop-python()
   "Python development."
   (interactive)
   (package-install 'python-mode)
-  (package-install 'jedi))
-(use-package jedi
+  (package-install 'company-jedi))
+(use-package python-mode
   :defer t
   :init
   (setq jedi:complete-on-dot t)
@@ -450,8 +487,7 @@ Please install:
   (defun jedi-config:setup-keys ()
     (local-set-key (kbd "M-.") 'jedi:goto-definition)
     (local-set-key (kbd "M-,") 'jedi:goto-definition-pop-marker)
-    (local-set-key (kbd "M-?") 'jedi:show-doc)
-    (local-set-key (kbd "M-/") 'jedi:get-in-function-call))
+    (local-set-key (kbd "M-?") 'jedi:show-doc))
   ;; Update python environment
   (defun py-venv-update()
     (defvar venv-executables-dir "bin")
@@ -470,11 +506,16 @@ Please install:
       (setq eshell-path-env path))
     (setenv "VIRTUAL_ENV" venv-current-dir))
   ;; Hooks
-  (add-hook 'python-mode-hook 'jedi-config:setup-server-args)
-  (add-hook 'python-mode-hook 'py-venv-update)
-  (add-hook 'python-mode-hook 'jedi:setup)
-  (add-hook 'python-mode-hook 'jedi:ac-setup)
-  (add-hook 'python-mode-hook 'jedi-config:setup-keys))
+  (if (package-installed-p 'company-jedi)
+      (progn
+        (add-hook 'python-mode-hook 'jedi-config:setup-server-args)
+        (add-hook 'python-mode-hook 'py-venv-update)
+        (add-hook 'python-mode-hook 'jedi:setup)
+        (add-hook 'python-mode-hook 'jedi-config:setup-keys)
+        (add-hook 'python-mode-hook '(lambda ()
+                                       (add-to-list 'company-backends
+                                                    '(company-jedi :with company-yasnippet))))))
+  )
 
 ;; php-mode
 (defun develop-php()
@@ -482,6 +523,51 @@ Please install:
   (interactive)
   (package-install 'php-mode)
   (package-install 'company-php))
+(use-package php-mode
+  :defer t
+  :hook
+  (php-mode . (lambda ()
+                (add-to-list 'company-backends '(company-ac-php-backend :with company-yasnippet)))))
+
+;; terraform-mode
+(defun develop-terraform()
+  "Terraform development."
+  (interactive)
+  (package-install 'company-terraform))
+(use-package company-terraform
+  :defer t
+  :hook
+  (terraform-mode . (lambda ()
+                      (add-to-list 'company-backends '(company-terraform :with company-yasnippet)))))
+
+;; ansible-mode
+(defun develop-ansible ()
+  "Ansible development."
+  (interactive)
+  (package-install 'ansible)
+  (package-install 'company-ansible))
+(use-package ansible
+  :defer t
+  :init
+  (add-hook 'ansible-hook '
+            (lambda ()
+              (add-to-list 'company-backends '(company-ansible :with company-yasnippet))
+              (yas-minor-mode-on))))
+;; java-mode
+(defun develop-java()
+  "Java develoment.
+Please install:
+https://download.eclipse.org/jdtls/snapshots/jdt-language-server-latest.tar.gz
+tar -vxf jdt-language-server-latest.tar.gz -C ~/.emacs.d/eclipse.jdt.ls/server/"
+  (interactive)
+  (package-install 'lsp-java)
+  (package-install 'company-lsp))
+(use-package lsp-java
+  :defer t
+  :init
+  (add-hook 'java-mode-hook '
+            (lambda () (require 'lsp-java) (lsp)
+              (add-to-list 'company-backends '(company-lsp :with company-yasnippet)))))
 
 (provide '.emacs)
 ;;; .emacs ends here
