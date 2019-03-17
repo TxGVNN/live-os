@@ -229,8 +229,6 @@ bindsym $mod+r mode "resize"
 bindsym $mod+b bar mode toggle
 bar {
         i3bar_command /usr/bin/i3bar
-        # i3bar_command ~/.i3/lemonbar/i3_lemonbar.sh
-        # status_command i3status -c ~/.i3/i3status.conf
         status_command ~/.i3/bin/conky-i3bar
         font pango:DejaVu Sans Mono, FontAwesome 8
         tray_output primary
@@ -245,8 +243,6 @@ bar {
             inactive_workspace #606060 #808080 #000000
             urgent_workspace   #AAAAAA #e60000 #ffffff
         }
-        # bindsym button1 nop
-        # bindsym button2 nop
 }
 # define color
 set $bg     #2c2c2e
@@ -270,10 +266,11 @@ client.focused_inactive     $bg     $bg         $ac     $id
 
 # start application
 exec --no-startup-id feh --bg-fill ~/.i3/background.bmp
-exec --no-startup-id conky -d -c ~/.i3/conky-right
+#exec --no-startup-id conky -d -c ~/.i3/conky-right
 exec --no-startup-id conky -d -c ~/.i3/conky-left
 #exec --no-startup-id conky -d -c ~/.i3/conky-bottom
-exec --no-startup-id ~/.i3/bin/xinput-fix
+#exec --no-startup-id ~/.i3/bin/bar
+#exec --no-startup-id ~/.i3/bin/xinput-fix
 exec --no-startup-id dunst
 exec --no-startup-id ibus-daemon --xim -d -r
 exec --no-startup-id xautolock -time 5 -locker '~/.i3/bin/i3lock.sh'
@@ -282,6 +279,7 @@ exec --no-startup-id redshift
 # lock screen
 bindsym XF86ScreenSaver exec ~/.i3/bin/i3lock.sh
 bindsym $mod+Mod1+l exec ~/.i3/bin/i3lock.sh
+bindsym control+Mod1+Delete exec ~/.i3/bin/i3lock.sh
 
 # Pulse Audio controls
 bindsym XF86AudioRaiseVolume exec --no-startup-id amixer -q sset Master 3%+
@@ -297,6 +295,7 @@ bindsym XF86Sleep exec ~/.i3/bin/i3lock.sh && systemctl suspend
 
 # Screenshot
 bindsym Print exec scrot 'scrot_%Y-%m-%d-%T_$wx$h.png' -e 'mv $f ~/Pictures/'
+bindsym $mod+Print exec gnome-screenshot -i -a
 
 # Toggle fastly terminal
 bindsym $mod+F1 exec ~/.i3/bin/fn 1
@@ -308,6 +307,9 @@ bindsym XF86AudioNext exec mpc next
 bindsym XF86AudioPrev exec mpc prev
 
 bindsym XF86Launch1 exec xset dpms force off
+
+# Assign workspace
+assign [class="Keepassx"] $tag0
 
 ## shortcut
 # emacs
@@ -324,7 +326,11 @@ bindsym $mod+Mod1+Shift+g exec chromium --temp-profile --incognito
 # gimp
 bindsym $mod+Mod1+p exec gimp
 # wicd
-bindsym $mod+Mod1+w exec wicd-client
+bindsym $mod+Mod1+w exec wicd-client -n
 # explore
 bindsym $mod+Mod1+r exec /usr/bin/rxvt -e ranger
+
+bindcode $mod+90 [title="YouTube"] scratchpad show
+for_window [title="YouTube"] sticky enable
+
 exec i3-msg workspace 1 $tag1

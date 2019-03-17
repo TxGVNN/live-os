@@ -9,7 +9,8 @@ cryptsetup
 curl
 debootstrap
 dirmngr
-emacs25-lucid
+dnsutils
+emacs25-nox
 feh
 firefox-esr
 fonts-font-awesome
