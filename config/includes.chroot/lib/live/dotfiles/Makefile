@@ -1,5 +1,5 @@
 HOME = $(shell pwd)
-build: emacs vim
+build: emacs
 
 emacs: .emacs
 	emacs -q --batch -l .emacs

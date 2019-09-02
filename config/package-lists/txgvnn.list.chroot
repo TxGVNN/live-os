@@ -7,10 +7,11 @@ chromium
 conky-all
 cryptsetup
 curl
+debconf
 debootstrap
 dirmngr
 dnsutils
-emacs25-nox
+emacs-nox
 feh
 firefox-esr
 fonts-font-awesome

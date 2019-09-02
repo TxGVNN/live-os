@@ -3,7 +3,7 @@ set -e
 
 _ARCH="amd64"
 _MIRROR="http://deb.debian.org/debian"
-_DIST="stretch"
+_DIST="stable"
 
 lb config noauto \
 	--verbose \
