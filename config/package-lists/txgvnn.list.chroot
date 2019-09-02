@@ -1,11 +1,11 @@
-abook
 acpi
 alsa-utils
 apt-file
 build-essential
 chromium
 conky-all
-cryptsetup
+console-setup
+cryptsetup-bin
 curl
 debconf
 debootstrap
@@ -15,7 +15,6 @@ emacs-nox
 feh
 firefox-esr
 fonts-font-awesome
-fonts-inconsolata
 gawk
 git
 global
@@ -27,13 +26,15 @@ htop
 i3
 i3lock
 ibus-unikey
-keepassx
+keepassxc
 libnotify-bin
 mpv
-mutt
+ntfs-3g
 openvpn
+p7zip-full
 parted
 pciutils
+pinentry-gtk2
 policykit-1
 ranger
 recordmydesktop
@@ -47,8 +48,7 @@ strace
 tcpdump
 tmux
 tor
-vim
-w3m
+torsocks
 weechat
 wicd
 wireshark
@@ -57,4 +57,3 @@ xdotool
 xinit
 xinput
 xsel
-zip

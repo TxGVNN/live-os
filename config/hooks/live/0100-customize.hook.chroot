@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+update-rc.d tor disable
+update-alternatives --set x-terminal-emulator /usr/bin/urxvt

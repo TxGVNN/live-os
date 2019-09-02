@@ -8,8 +8,9 @@
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("txgvnn" . "https://txgvnn.github.io/packages/"))
-(package-initialize)
+(add-to-list 'package-archives '("me" . "https://txgvnn.github.io/packages/"))
+(when (< emacs-major-version 27)
+  (package-initialize))
 
 ;;; BOOTSTRAP `use-package'
 (unless (package-installed-p 'use-package)
@@ -19,31 +20,20 @@
 ;;; PACKAGES
 ;; ivy
 (use-package ivy
-  :ensure t
-  :init (ivy-mode)
-  :bind
-  ("C-x C-r" . ivy-resume)
-  :config
+  :ensure t :pin me
+  :bind ("C-x C-r" . ivy-resume)
+  :init
   (setq ivy-extra-directories '("./"))
   (setq ivy-on-del-error-function #'ignore)
   (setq ivy-magic-tilde nil)
   (setq ivy-magic-slash-non-match-action 'ivy-magic-slash-non-match-action)
-  ;; Can not exit minibuffer - https://github.com/abo-abo/swiper/issues/1953
-  (defvar ivy-recursive-restore-in-progress nil)
-  (defun ivy-note-when-inside-recursive-restore (orig-fun &rest args)
-    (let ((ivy-recursive-restore-in-progress t))
-      (apply orig-fun args)))
-  (defun ivy-no-read-while-exiting-recursion (orig-fun &rest args)
-    (if ivy-recursive-restore-in-progress
-        (error "Cannot use `ivy-read' while restoring recursive state")
-      (apply orig-fun args)))
-  (advice-add 'ivy-recursive-restore :around
-              #'ivy-note-when-inside-recursive-restore)
-  (advice-add 'ivy-read :around #'ivy-no-read-while-exiting-recursion))
+  :config
+  (define-key ivy-minibuffer-map (kbd "TAB") 'ivy-partial)
+  (ivy-mode))
 
 ;; counsel
-(use-package counsel :pin txgvnn
-  :ensure t
+(use-package counsel
+  :ensure t :pin me
   :bind
   ("M-x" . counsel-M-x)
   ("M-X" . execute-extended-command)
@@ -65,23 +55,31 @@
 
 ;; swiper
 (use-package swiper
-  :ensure t
+  :ensure t :pin me
   :config
   (defun swiper-at-point (sym)
     "Use `swiper' to search for the symbol at point."
     (interactive (list (thing-at-point 'symbol))) (swiper sym))
   :bind ("M-s w" . swiper-at-point))
 
+;; fuzzy
+(use-package fuzzy
+  :ensure t
+  :config (turn-on-fuzzy-isearch))
+
 ;; avy
 (use-package avy
   :ensure t
-  :bind ("M-g a" . avy-goto-char)
-  :bind ("M-g l" . avy-goto-line))
+  :config
+  (setq avy-all-windows nil)
+  (setq avy-background t)
+  :bind
+  ("M-g a" . avy-goto-char)
+  ("M-g l" . avy-goto-line))
 
 ;; crux
 (use-package crux
-  :pin txgvnn
-  :ensure t
+  :ensure t :pin me
   :bind
   ("C-^" . crux-top-join-line)
   ("C-a" . crux-move-beginning-of-line)
@@ -96,11 +94,6 @@
   ("C-h RET" . crux-find-user-init-file)
   ("C-x x e" . crux-open-with)
   ("C-x 7" . crux-swap-windows))
-
-;; vlf - view large files
-(use-package vlf
-  :ensure t
-  :config (require 'vlf-setup))
 
 ;; move-text
 (use-package move-text
@@ -129,9 +122,9 @@
 ;; git-gutter
 (use-package git-gutter
   :ensure t
-  :init (global-git-gutter-mode)
-  :config (setq git-gutter:lighter "")
+  :init (setq git-gutter:lighter "")
   (add-hook 'magit-post-refresh-hook #'git-gutter:update-all-windows)
+  (global-git-gutter-mode)
   :bind
   ("C-x g p" . git-gutter:previous-hunk)
   ("C-x g n" . git-gutter:next-hunk)
@@ -153,16 +146,20 @@
   :init
   (setq projectile-dynamic-mode-line nil)
   (setq projectile-mode-line-prefix "")
-  (projectile-mode)
-  :config
   (setq projectile-project-compilation-cmd "make ")
   (setq projectile-completion-system 'ivy)
-  (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map))
+  :config
+  (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
+  (projectile-mode))
 ;; counsel-projectile
 (use-package counsel-projectile
-  :ensure t
+  :ensure t :defer t
   :after (projectile)
-  :init (counsel-projectile-mode))
+  :init
+  (define-key projectile-mode-map [remap projectile-switch-project] #'counsel-projectile-switch-project)
+  (define-key projectile-mode-map [remap projectile-find-file] #'counsel-projectile-find-file)
+  (define-key projectile-mode-map [remap projectile-ag] #'counsel-projectile-ag)
+  (define-key projectile-mode-map [remap projectile-compile-project] #'counsel-compile))
 
 ;; perspective
 (use-package perspective
@@ -202,17 +199,17 @@
 ;; volatile-highlights
 (use-package volatile-highlights
   :ensure t
-  :init (volatile-highlights-mode))
+  :config (volatile-highlights-mode))
 ;; anzu
 (use-package anzu
   :ensure t
-  :init (global-anzu-mode)
-  :config
+  :init
   (setq anzu-mode-lighter "")
   (global-set-key [remap query-replace] 'anzu-query-replace)
   (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
   (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
-  (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp))
+  (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
+  :config (global-anzu-mode))
 ;; symbol-overlay
 (use-package symbol-overlay
   :ensure t
@@ -238,43 +235,46 @@
    . yas-minor-mode))
 ;; My yasnippet-snippets
 (use-package yasnippet-snippets
-  :ensure t :pin txgvnn)
+  :ensure t :defer t :pin me)
 
 ;; company
 (use-package company
   :ensure t
-  :init (global-company-mode)
-  :config (setq company-lighter-base "@")
+  :init (setq company-lighter-base "@")
+  :bind ("M-]" . company-complete-custom)
+  :config
   (define-key company-active-map (kbd "C-n") #'company-select-next)
   (define-key company-active-map (kbd "C-p") #'company-select-previous)
   (defun company-complete-custom (&optional prefix)
     "Company and Yasnippet(PREFIX)."
     (interactive "P")
-    (if (company--active-p) (company-cancel))
+    (if (fboundp 'company--active-p)
+        (if (company--active-p) (company-cancel)))
     (if prefix
         (if (not company-mode) (yas-expand)
           (call-interactively 'company-yasnippet))
       (call-interactively 'company-complete)))
-  :bind ("M-]" . company-complete-custom))
+  (global-company-mode))
 
 ;; undo-tree
 (use-package undo-tree
   :ensure t
   :init
   (setq undo-tree-mode-lighter "")
-  (setq undo-tree-visualizer-timestamps t)
   (setq undo-tree-history-directory-alist
         `((".*" . ,temporary-file-directory)))
   (setq undo-tree-auto-save-history t)
-  (global-undo-tree-mode))
+  :config (global-undo-tree-mode))
 
 ;; themes
-(use-package doom-themes :pin txgvnn
+(use-package doom-themes
   :ensure t
-  :init (load-theme 'doom-one t)
+  :init (load-theme 'doom-gruvbox t)
   :config (doom-themes-org-config))
 
 ;;; OPTIONS
+;; vlf - view large files
+(use-package vlf :ensure t :defer t)
 ;; which-key
 (cond ((package-installed-p 'which-key)
        (setq which-key-lighter "")
@@ -289,12 +289,14 @@
         (setq google-translate-translation-directions-alist '(("vi" . "en"))))
     (call-interactively 'google-translate-smooth-translate))
   :bind ("M-s t" . google-translate-query))
-
-(defun develop-utils()
-  "Utility packages."
-  (interactive)
-  (package-install 'json-mode)
-  (package-install 'google-translate))
+(use-package debpaste
+  :defer t
+  :init
+  (setq debpaste-base-url "https://paste.debian.net/"
+        debpaste-paste-is-hidden t))
+(use-package git-link
+  :defer t
+  :init (setq git-link-use-commit t))
 
 ;;; HOOKS
 (defun add-to-hooks (func &rest hooks)
@@ -302,7 +304,8 @@
   (dolist (hook hooks) (add-hook hook func)))
 ;; enable whitespace-mode
 (add-to-hooks 'whitespace-mode
-              'prog-mode-hook 'org-mode-hook)
+              'prog-mode-hook 'org-mode-hook
+              'markdown-mode-hook)
 ;; flymake on g-n & g-p bindings
 (add-hook 'flymake-mode-hook
           (lambda()
@@ -335,7 +338,7 @@
   (let ((filename (if (equal major-mode 'dired-mode) default-directory
                     (buffer-file-name))))
     (when filename (kill-new filename)
-          (message (format "Yanked %s (%s)" filename (what-line))))))
+          (message "Yanked %s (%s)" filename (what-line)))))
 (defun split-window-vertically-last-buffer (prefix)
   "Split window vertically.
 - PREFIX: default(1) is switch to last buffer"
@@ -354,14 +357,11 @@
   "Copy to clipboard."
   (interactive)
   (if (display-graphic-p)
-      (progn (message "Yanked region to x-clipboard!")
-             (call-interactively 'clipboard-kill-ring-save))
+      (progn (call-interactively 'clipboard-kill-ring-save))
     (if (region-active-p)
         (progn
           (shell-command-on-region (region-beginning) (region-end) "xsel -i -b")
-          (message "Yanked region to clipboard!")
-          (deactivate-mark))
-      (message "No region active; can't yank to clipboard!"))))
+          (deactivate-mark)))))
 (defun paste-from-clipboard ()
   "Paste from clipboard."
   (interactive)
@@ -389,6 +389,10 @@
   (insert
    (concat (file-name-as-directory temporary-file-directory)
            (make-temp-name "tmp"))))
+(defun insert-datetime()
+  "Insert YYYmmdd-HHMM."
+  (interactive)
+  (insert (format-time-string "%Y%m%d-%H%M" (current-time) t)))
 (defun linux-stat-file()
   "Run stat command in linux in current file."
   (interactive)
@@ -401,8 +405,8 @@
   (interactive)
   (let ((filename
          (make-temp-file
-          (format "%s_%s_" (buffer-name)
-                  (format-time-string "%m-%d_%H-%M" (time-to-seconds)))
+          (format "%s_%s_" (file-name-base (buffer-name))
+                  (format-time-string "%Y%m%d_%H%M" (time-to-seconds)))
           nil (file-name-extension (buffer-name) t))))
     (if (region-active-p)
         (write-region (point) (mark) filename)
@@ -413,37 +417,68 @@
   (interactive)
   (let ((help (help-at-pt-kbd-string)))
     (if help (eww help) (message "Nothing!"))))
-(defun share-to-online (downloads)
-  "Share buffer to online.
+(defun share-to-transfer_sh (downloads)
+  "Share buffer to transfer.sh.
 - DOWNLOADS: The max-downloads"
   (interactive "p")
+  (let ((temp-file
+         (make-temp-file ".sharing." nil (file-name-extension (buffer-name) t)))
+        (url "https://transfersh.com")
+        (msg "") file-hash)
+    (if (region-active-p)
+        (write-region (point) (mark) temp-file)
+      (write-region (point-min) (point-max) temp-file))
+    (when (yes-or-no-p (format "Share to %s (%d)?" url downloads))
+      (when (yes-or-no-p "Encrypt?")
+        (let ((file-hash (md5 (buffer-string))))
+          (shell-command (format "openssl aes-256-cbc -md md5 -k %s -in '%s' -out '%s.enc'"
+                                 file-hash temp-file temp-file))
+          (dired-delete-file temp-file)
+          (setq temp-file (format "%s.enc" temp-file))
+          (setq msg (format "| openssl aes-256-cbc -d -md md5 -k %s -in - 2>/dev/null"
+                            file-hash))))
+      (message "curl -L %s 2>/dev/null %s"
+               (shell-command-to-string
+                (format "curl -q -H 'Max-Downloads: %d' --upload-file '%s' %s 2>/dev/null"
+                        downloads temp-file url)) msg)
+      (dired-delete-file temp-file))))
+
+(defun share-to-paste.debian.net ()
+  "Share buffer to transfer.sh.
+- DOWNLOADS: The max-downloads"
+  (interactive)
   (let ((temp-file
          (make-temp-file ".sharing." nil (file-name-extension (buffer-name) t)))
         (msg "") file-hash)
     (if (region-active-p)
         (write-region (point) (mark) temp-file)
       (write-region (point-min) (point-max) temp-file))
-    (when (yes-or-no-p "Encrypt?")
-      (let (( file-hash (md5 (buffer-string))))
-        (shell-command (format "openssl aes-128-cbc -md md5 -k %s -in '%s' -out '%s.enc'"
-                               file-hash temp-file temp-file))
-        (dired-delete-file temp-file)
-        (setq temp-file (format "%s.enc" temp-file))
-        (setq msg (format "# openssl aes-128-cbc -d -md md5 -k %s -in %s 2>/dev/null"
-                          file-hash (file-name-nondirectory temp-file)))))
-    (when (yes-or-no-p (format "Share online (%d)?" downloads))
-      (message "%s %s"
-               (shell-command-to-string
-                (format "curl -q -H 'Max-Downloads: %d' --upload-file '%s' https://transfer.sh 2>/dev/null"
-                        downloads temp-file))
-               msg)
+    (when (yes-or-no-p "Share to paste.debian.net?")
+      (when (yes-or-no-p "Encrypt?")
+        (let (( file-hash (md5 (buffer-string))))
+          (shell-command (format "openssl aes-256-cbc -md md5 -k %s -in '%s' | base64 > '%s.enc'"
+                                 file-hash temp-file temp-file))
+          (dired-delete-file temp-file)
+          (setq temp-file (format "%s.enc" temp-file))
+          (setq msg (format "| base64 -d | openssl aes-256-cbc -d -md md5 -k %s -in - 2>/dev/null"
+                            file-hash))))
+      (find-file-read-only temp-file)
+      (debpaste-paste-buffer (get-file-buffer temp-file))
+      (message "curl %s 2>/dev/null %s" (debpaste-get-param-val 'download-url (debpaste-get-posted-info)) msg)
       (dired-delete-file temp-file))))
+
+(defvar share-to-online-func
+  'share-to-transfer_sh)
+(defun share-to-online ()
+  "Share buffer to online."
+  (interactive)
+  (call-interactively share-to-online-func))
 
 (defvar linum-func
   (if (fboundp 'display-line-numbers-mode)
       'display-line-numbers-mode 'linum-mode))
 (defun goto-line-with-feedback ()
-  "Show line numbers temporarily when goto-line."
+  "Show line numbers temporarily when 'goto-line."
   (interactive)
   (unwind-protect
       (progn
@@ -451,97 +486,6 @@
         (goto-line (read-number "Goto line: ")))
     (funcall linum-func 0)))
 (global-set-key [remap goto-line] #'goto-line-with-feedback)
-
-(defalias 'yes-or-no-p 'y-or-n-p)
-(global-set-key (kbd "C-x C-b") 'ibuffer)
-(global-set-key (kbd "C-x j") 'mode-line-other-buffer)
-(global-set-key (kbd "C-x m") 'compile)
-(global-set-key (kbd "M-s e") 'eww)
-(global-set-key (kbd "M-s E") 'eww-search-local-help)
-(global-set-key (kbd "M-s g") 'rgrep)
-(global-set-key (kbd "M-s s") 'isearch-forward-regexp)
-(global-set-key (kbd "M-s r") 'isearch-backward-regexp)
-(global-set-key (kbd "M-#") 'mark-backword)
-(global-set-key (kbd "C-M-_") 'dabbrev-completion)
-(global-set-key (kbd "C-x x .") 'delete-trailing-whitespace)
-(global-set-key (kbd "C-x x ;") 'indent-and-delete-trailing-whitespace)
-(global-set-key (kbd "C-x x b") 'rename-buffer)
-(global-set-key (kbd "C-x x o") 'org-agenda)
-(global-set-key (kbd "C-x x p") 'yank-file-path)
-(global-set-key (kbd "C-x x r") 'revert-buffer)
-(global-set-key (kbd "C-x x a") 'linux-stat-file)
-(global-set-key (kbd "C-x x n") 'insert-temp-filename)
-(global-set-key (kbd "C-x x x") 'save-region-to-temp)
-(global-set-key (kbd "C-x x s") 'share-to-online)
-(global-set-key (kbd "C-x x t") 'untabify)
-(global-set-key (kbd "C-x x T") 'tabify)
-(global-set-key (kbd "C-x x M-w") 'copy-to-clipboard)
-(global-set-key (kbd "C-x x C-y") 'paste-from-clipboard)
-(global-set-key (kbd "C-x 2") 'split-window-vertically-last-buffer)
-(global-set-key (kbd "C-x 3") 'split-window-horizontally-last-buffer)
-(global-set-key (kbd "C-x 4 C-v") 'scroll-other-window)
-(global-set-key (kbd "C-x 4 M-v") 'scroll-other-window-down)
-(global-set-key (kbd "C-x 4 M-<") 'beginning-of-buffer-other-window)
-(global-set-key (kbd "C-x 4 M->") 'end-of-buffer-other-window)
-(global-set-key (kbd "M-z") 'zap-up-to-char)
-
-(prefer-coding-system 'utf-8)
-(setq auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
-      backup-directory-alist `(("." . ,(concat user-emacs-directory "backups")))
-      tramp-auto-save-directory `,(concat user-emacs-directory "backups"))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(Buffer-menu-use-header-line nil)
- '(auto-revert-check-vc-info t)
- '(auto-revert-mode-text " ~")
- '(backup-by-copying t)
- '(browse-url-browser-function (quote eww-browse-url))
- '(column-number-mode t)
- '(compilation-scroll-output t)
- '(default-input-method "vietnamese-telex")
- '(delete-old-versions t)
- '(delete-selection-mode t)
- '(eldoc-minor-mode-string " ED")
- '(enable-local-variables :all)
- '(global-hl-line-mode t)
- '(indent-tabs-mode nil)
- '(inhibit-startup-screen t)
- '(initial-scratch-message nil)
- '(kept-new-versions 6)
- '(menu-bar-mode nil)
- '(org-agenda-files (quote ("~/.gxt/org")))
- '(org-babel-load-languages (quote ((emacs-lisp . t) (shell . t))))
- '(org-enforce-todo-dependencies t)
- '(org-todo-keyword-faces (quote (("BLOCKED" . error) ("WIP" . warning))))
- '(org-todo-keywords
-   (quote
-    ((sequence "TODO(t)" "|" "DONE(d)")
-     (sequence "WIP(w)" "BLOCKED(b)" "|" "REJECTED(r)"))))
- '(read-quoted-char-radix 16)
- '(safe-local-variable-values
-   (quote
-    ((eval setq default-directory
-           (locate-dominating-file buffer-file-name ".dir-locals.el")))))
- '(scroll-bar-mode nil)
- '(show-paren-mode t)
- '(tab-stop-list (quote (4 8 12 16 20 24 28 32 36)))
- '(tab-width 4)
- '(tool-bar-mode nil)
- '(version-control t)
- '(whitespace-style
-   (quote
-    (face tabs trailing space-before-tab newline empty tab-mark))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(ivy-virtual ((t (:inherit unspecified :foreground unspecified))))
- '(symbol-overlay-default-face ((t (:inherit bold :underline t))))
- '(vc-state-base ((t (:inherit font-lock-string-face :weight bold)))))
 
 ;;; MODELINE
 (setq mode-line-position
@@ -575,7 +519,7 @@
                 mode-line-client
                 mode-line-modified
                 mode-line-remote
-                ;; mode-line-frame-identification -- this is for text-mode emacs only
+                mode-line-frame-identification
                 " "
                 mode-line-buffer-identification
                 " "
@@ -586,6 +530,234 @@
                 mode-line-modes
                 mode-line-misc-info
                 mode-line-end-spaces))
+
+;; isearch
+(global-set-key (kbd "M-s s") 'isearch-forward-regexp)
+(global-set-key (kbd "M-s r") 'isearch-backward-regexp)
+(define-key isearch-mode-map (kbd "M-s %") 'isearch-query-replace-regexp)
+;; term
+(with-eval-after-load 'term
+  (define-key term-raw-map (kbd "C-c C-y") 'term-paste))
+;; summary-mode
+(eval-after-load 'gnus-summary-mode
+  (setq gnus-summary-line-format "%U%R%z %d %-23,23f (%4,4L) %{%B%}%s\n"
+        gnus-sum-thread-tree-root            ""
+        gnus-sum-thread-tree-false-root      "──> "
+        gnus-sum-thread-tree-leaf-with-other "├─> "
+        gnus-sum-thread-tree-vertical        "│ "
+        gnus-sum-thread-tree-single-leaf     "└─> "))
+
+(defalias 'yes-or-no-p 'y-or-n-p)
+(global-set-key (kbd "M-D") 'kill-whole-line)
+(global-set-key (kbd "C-x C-@") 'pop-to-mark-command)
+(global-set-key (kbd "C-x C-SPC") 'pop-to-mark-command)
+(global-set-key (kbd "C-x C-b") 'ibuffer)
+(global-set-key (kbd "C-x j") 'mode-line-other-buffer)
+(global-set-key (kbd "C-x m") 'compile)
+(global-set-key (kbd "M-s e") 'eww)
+(global-set-key (kbd "M-s E") 'eww-search-local-help)
+(global-set-key (kbd "M-s g") 'rgrep)
+(global-set-key (kbd "M-#") 'mark-backword)
+(global-set-key (kbd "C-M-_") 'dabbrev-completion)
+(global-set-key (kbd "C-x x .") 'delete-trailing-whitespace)
+(global-set-key (kbd "C-x x ;") 'indent-and-delete-trailing-whitespace)
+(global-set-key (kbd "C-x x b") 'rename-buffer)
+(global-set-key (kbd "C-x x o") 'org-agenda)
+(global-set-key (kbd "C-x x p") 'yank-file-path)
+(global-set-key (kbd "C-x x r") 'revert-buffer)
+(global-set-key (kbd "C-x x a") 'linux-stat-file)
+(global-set-key (kbd "C-x x n") 'insert-temp-filename)
+(global-set-key (kbd "C-x x d") 'insert-datetime)
+(global-set-key (kbd "C-x x x") 'save-region-to-temp)
+(global-set-key (kbd "C-x x s") 'share-to-online)
+(global-set-key (kbd "C-x x t") 'untabify)
+(global-set-key (kbd "C-x x T") 'tabify)
+(global-set-key (kbd "C-x x M-w") 'copy-to-clipboard)
+(global-set-key (kbd "C-x x C-y") 'paste-from-clipboard)
+(global-set-key (kbd "C-x 2") 'split-window-vertically-last-buffer)
+(global-set-key (kbd "C-x 3") 'split-window-horizontally-last-buffer)
+(global-set-key (kbd "C-x 4 C-v") 'scroll-other-window)
+(global-set-key (kbd "C-x 4 M-v") 'scroll-other-window-down)
+(global-set-key (kbd "C-x 4 M-<") 'beginning-of-buffer-other-window)
+(global-set-key (kbd "C-x 4 M->") 'end-of-buffer-other-window)
+(global-set-key (kbd "M-z") 'zap-up-to-char)
+
+(setq select-safe-coding-system-function t)
+(set-default-coding-systems 'utf-8)
+(prefer-coding-system 'utf-8)
+
+(setq auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
+      backup-directory-alist `(("." . ,(concat user-emacs-directory "backups")))
+      tramp-auto-save-directory `,(concat user-emacs-directory "backups"))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(Buffer-menu-use-header-line nil)
+ '(auto-revert-check-vc-info t)
+ '(auto-revert-mode-text " ~")
+ '(backup-by-copying t)
+ '(browse-url-browser-function (quote eww-browse-url))
+ '(column-number-mode t)
+ '(compilation-scroll-output t)
+ '(default-input-method "vietnamese-telex")
+ '(delete-old-versions t)
+ '(delete-selection-mode t)
+ '(eldoc-minor-mode-string " ED")
+ '(electric-indent-mode nil)
+ '(enable-local-variables :all)
+ '(ffap-machine-p-known (quote reject))
+ '(global-hl-line-mode t)
+ '(indent-tabs-mode nil)
+ '(inhibit-startup-screen t)
+ '(initial-major-mode (quote fundamental-mode))
+ '(initial-scratch-message nil)
+ '(kept-new-versions 6)
+ '(menu-bar-mode nil)
+ '(org-babel-load-languages (quote ((emacs-lisp . t) (shell . t))))
+ '(org-enforce-todo-dependencies t)
+ '(org-todo-keyword-faces (quote (("BLOCKED" . error) ("WIP" . warning))))
+ '(org-todo-keywords
+   (quote
+    ((sequence "TODO(t)" "|" "DONE(d)")
+     (sequence "WIP(w)" "BLOCKED(b)" "|" "REJECTED(r)"))))
+ '(read-quoted-char-radix 16)
+ '(safe-local-variable-values
+   (quote
+    ((eval setq default-directory
+           (locate-dominating-file buffer-file-name ".dir-locals.el")))))
+ '(scroll-bar-mode nil)
+ '(show-paren-mode t)
+ '(tab-stop-list (quote (4 8 12 16 20 24 28 32 36)))
+ '(tab-width 4)
+ '(tool-bar-mode nil)
+ '(version-control t)
+ '(whitespace-style
+   (quote
+    (face tabs trailing space-before-tab newline empty tab-mark))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ivy-virtual ((t (:inherit unspecified :foreground unspecified))))
+ '(symbol-overlay-default-face ((t (:inherit bold :underline t))))
+ '(vc-state-base ((t (:inherit font-lock-string-face :weight bold)))))
+
+;;; PATCHING
+(use-package advice-patch :ensure t)
+
+(advice-add 'base64-encode-region
+            :before (lambda (&rest _args)
+                      "Pass prefix arg as third arg to `base64-encode-region'."
+                      (interactive "r\nP")))
+
+(with-eval-after-load 'flycheck
+  (defun flycheck-display-error-at-point-soon () nil)
+  (setq flycheck-highlighting-mode (quote columns)))
+
+(unless (version< emacs-version "26.1")
+  (with-eval-after-load 'flymake
+    (setq byte-compile-warnings nil)
+    (advice-patch 'flymake--highlight-line  '(+ 1 (flymake--diag-beg diagnostic)) '(flymake--diag-end diagnostic))
+    (advice-patch 'flymake--mode-line-format '" FlyM" '" Flymake")
+    (setq byte-compile-warnings t)))
+
+(with-eval-after-load 'perspective
+  (defun ivy-switch-to-buffer ()
+    "Switch to another buffer in the CURRENT PERSP."
+    (interactive)
+    (if (not (bound-and-true-p persp-mode))
+        (ivy-switch-buffer)
+      (setq this-command #'ivy-switch-buffer)
+      (ivy-read "Switch to buffer: " (remove nil (mapcar 'buffer-name (persp-buffers (persp-curr))))
+                :keymap ivy-switch-buffer-map
+                :preselect (buffer-name (other-buffer (current-buffer)))
+                :action #'ivy--switch-buffer-action
+                :matcher #'ivy--switch-buffer-matcher
+                :caller 'ivy-switch-buffer)))
+  (with-eval-after-load 'ivy
+    (define-key ivy-mode-map (kbd "C-x b") 'ivy-switch-to-buffer))
+
+  (defun ivy-switch-buffer-with-persp (&optional _)
+    "Clone from persp-switch-to-buffer."
+    (interactive)
+    (let (buffer)
+      (setq buffer (window-normalize-buffer-to-switch-to (read-buffer-to-switch "Switch to buffer: ")))
+      (if (memq buffer (persp-buffers (persp-curr)))
+          (switch-to-buffer buffer)
+        (let ((other-persp (persp-buffer-in-other-p buffer)))
+          (when (eq (car-safe other-persp) (selected-frame))
+            (persp-switch (cdr other-persp)))
+          (switch-to-buffer buffer)))))
+  (with-eval-after-load 'ivy
+    (ivy-add-actions
+     'ivy-switch-buffer
+     '(("p" ivy-switch-buffer-with-persp "persp-switch-to-buffer"))))
+  (defun persp-update-modestring ()
+    "Override persp-update-modestring."
+    (when persp-show-modestring
+      (let ((open (list (nth 0 persp-modestring-dividers)))
+            (close (list (nth 1 persp-modestring-dividers)))
+            (sep (nth 2 persp-modestring-dividers)))
+        (set-frame-parameter
+         nil 'persp--modestring
+         (append open
+                 (cons (persp-format-name (persp-name (persp-curr)))())
+                 close)))))
+  ;; find file with perspective and projectile
+  (with-eval-after-load 'counsel
+    (defun counsel-find-file-action (x)
+      "Find file X."
+      (with-ivy-window
+        (if (and counsel-find-file-speedup-remote
+                 (file-remote-p ivy--directory))
+            (let ((find-file-hook nil))
+              (find-file (expand-file-name x ivy--directory)))
+          (if (and (bound-and-true-p persp-mode) (bound-and-true-p projectile-mode))
+              (let (project-name (project-name-root (projectile-project-root (expand-file-name x))))
+                (when project-name-root
+                  (setq project-name (funcall projectile-project-name-function project-name-root))
+                  (persp-switch project-name))))
+          (find-file (expand-file-name x ivy--directory)))))))
+
+(with-eval-after-load 'counsel-projectile
+  (advice-patch 'counsel-projectile-switch-project-by-name
+                '(run-hook-with-args 'projectile-before-switch-project-hook project)
+                '(run-hooks 'projectile-before-switch-project-hook))
+
+  (add-hook 'projectile-before-switch-project-hook
+            (lambda (project-to-switch)
+              (if (and project-to-switch (bound-and-true-p persp-mode))
+                  (persp-switch (funcall projectile-project-name-function project-to-switch)))))
+  (defun counsel-projectile-find-file-action-find-file-jump (file)
+    "Call `counsel-find-file' from FILE's directory."
+    (let* ((f (projectile-expand-root file))
+           (default-directory (file-name-directory f)))
+      (counsel-file-jump)))
+  (ivy-add-actions
+   'counsel-projectile
+   '(("f" counsel-projectile-find-file-action-find-file-jump
+      "counsel-file-jump")))
+  (ivy-add-actions
+   'counsel-projectile-find-file
+   '(("f" counsel-projectile-find-file-action-find-file-jump
+      "counsel-file-jump"))))
+
+(with-eval-after-load 'projectile
+  (defun projectile-run-term (program)
+    "Override project-run-term."
+    (interactive (list nil))
+    (let* ((project (projectile-ensure-project (projectile-project-root)))
+           (termname (concat "term " (projectile-project-name project)))
+           (buffer (concat "*" termname "*")))
+      (unless (get-buffer buffer)
+        (require 'term)
+        (projectile-with-default-dir project
+          (ansi-term (or explicit-shell-file-name
+                         (getenv "SHELL") "/bin/sh") termname)))
+      (switch-to-buffer buffer))))
 
 ;;; LANGUAGES
 ;; .emacs
@@ -599,15 +771,6 @@
     (other-window 1 nil)
     (message "Override %s by %s to update" user-init-file upstream)))
 
-;; summary-mode
-(eval-after-load 'gnus-summary-mode
-  (setq gnus-summary-line-format "%U%R%z %d %-23,23f (%4,4L) %{%B%}%s\n"
-        gnus-sum-thread-tree-root            ""
-        gnus-sum-thread-tree-false-root      "──> "
-        gnus-sum-thread-tree-leaf-with-other "├─> "
-        gnus-sum-thread-tree-vertical        "│ "
-        gnus-sum-thread-tree-single-leaf     "└─> "))
-
 ;; c-mode
 (defun my-c-mode-common-hook ()
   "C-mode hook."
@@ -619,29 +782,29 @@
 
 ;; go-mode
 (defun develop-go()
-  "Go development.
+  "Go develoment.
 Please install:
-   go get -u golang.org/x/tools/cmd/...
-   go get -u golang.org/x/tools/cmd/goimports
-   go get -u golang.org/x/tools/cmd/guru
-   go get -u github.com/rogpeppe/godef/...
-   go get -u github.com/nsf/gocode
-   go get -u github.com/dougm/goflymake"
+   GO111MODULE=on go get golang.org/x/tools/gopls@latest
+   go get -u github.com/sourcegraph/go-langserver"
   (interactive)
-  (package-install 'go-projectile)
-  (package-install 'company-go))
-(use-package go-projectile
-  :defer t
-  :init
-  (defun my-go-mode-hook ()
-    (add-hook 'before-save-hook 'gofmt-before-save) ; gofmt before every save
-    (setq gofmt-command "goimports")
-    (go-guru-hl-identifier-mode)                    ; highlight identifiers
-    (go-eldoc-setup)
-    (local-set-key (kbd "M-.") 'godef-jump)
-    (local-set-key (kbd "M-,") 'pop-tag-mark)
-    (add-to-list 'company-backends 'company-go))
-  (add-hook 'go-mode-hook 'my-go-mode-hook))
+  (package-install 'go-mode)
+  (package-install 'lsp-mode))
+(with-eval-after-load 'go-mode
+  (add-hook 'go-mode-hook
+            (lambda ()
+              (lsp-deferred)
+              ;; gofmt before every save
+              (add-hook 'before-save-hook 'gofmt-before-save)))
+  (setq gofmt-command "goimports")
+  (defun go-print-debug-at-point()
+    "Print debug."
+    (interactive)
+    (let (var)
+      (setq var (substring-no-properties (thing-at-point 'symbol)))
+      (move-end-of-line nil)
+      (newline-and-indent)
+      (insert (format "fmt.Printf(\"D: %s+%d %s, %%+v\\n\", %s)"
+                      (file-name-nondirectory (buffer-file-name)) (line-number-at-pos) var var)))))
 
 ;; python-mode
 (defun develop-python()
@@ -670,8 +833,10 @@ Please install:
       (setq var (substring-no-properties (thing-at-point 'symbol)))
       (move-end-of-line nil)
       (newline-and-indent)
-      (insert (format "print(\"%d:%s: {}\".format(%s))" (line-number-at-pos) var var)))))
-(add-hook 'python-mode-hook 'lsp)
+      (insert (format "print(\"D: %s+%d %s, {}\".format(%s))"
+                      (file-name-nondirectory (buffer-file-name)) (line-number-at-pos) var var)))))
+(add-hook 'python-mode-hook #'lsp-deferred)
+
 
 ;; php-mode
 (defun develop-php()
@@ -729,9 +894,7 @@ tar -vxf jdt-language-server-latest.tar.gz -C ~/.emacs.d/eclipse.jdt.ls/server/"
 (use-package lsp-java
   :defer t
   :init
-  (add-hook 'java-mode-hook
-            (lambda () (require 'lsp-java) (lsp))))
-
+  (add-hook 'java-mode-hook #'lsp-deferred))
 ;; html-mode
 (defun develop-html()
   "HTML development."
@@ -742,21 +905,17 @@ tar -vxf jdt-language-server-latest.tar.gz -C ~/.emacs.d/eclipse.jdt.ls/server/"
   :hook (html-mode . indent-guide-mode)
   :config (set-face-foreground 'indent-guide-face "dimgray"))
 
-;; js-mode
-(defun develop-js()
-  "JS development.
+;; web-mode
+(defun develop-web()
+  "WEB development.
 npm i -g javascript-typescript-langserver"
   (interactive)
-  (package-install 'lsp-mode)
-  (package-install 'company-lsp))
-(use-package lsp-mode
+  (package-install 'web-mode)
+  (package-install 'eslint-fix))
+(use-package web-mode
   :defer t
-  :config
-  (require 'lsp)
-  (require 'lsp-clients)
-  :hook
-  (js-mode . (lambda() (lsp)
-               (define-key js-mode-map (kbd "M-.") 'xref-find-definitions))))
+  :init
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . web-mode)))
 
 ;; gitlab-mode
 (defun develop-gitlab-ci()
@@ -770,95 +929,18 @@ npm i -g javascript-typescript-langserver"
       (flycheck-mode)))
 (add-hook 'gitlab-ci-mode-hook 'gitlab-ci-mode-my-hook)
 
-;;; PATCHING
-(with-eval-after-load 'flycheck
-  (defun flycheck-display-error-at-point-soon () nil)
-  (setq flycheck-mode-line-prefix "FC"
-        flycheck-highlighting-mode (quote columns)))
+;; yaml-mode
+(use-package yaml-mode
+  :defer t
+  :hook (yaml-mode . whitespace-mode))
 
-(unless (version< emacs-version "26.1")
-  (use-package advice-patch
-    :ensure t
-    :config
-    ;; flymake--highlight-line only a char
-    (with-eval-after-load 'flymake
-      (setq byte-compile-warnings nil)
-      (advice-patch 'flymake--highlight-line  '(+ 1 (flymake--diag-beg diagnostic)) '(flymake--diag-end diagnostic))
-      (advice-patch 'flymake--mode-line-format '" FlyM" '" Flymake")
-      (setq byte-compile-warnings t))))
-
-(with-eval-after-load 'perspective
-  (defun ivy-switch-to-buffer ()
-    "Switch to another buffer in the CURRENT PERSP."
-    (interactive)
-    (if (not (bound-and-true-p persp-mode))
-        (ivy-switch-buffer)
-      (setq this-command #'ivy-switch-buffer)
-      (ivy-read "Switch to buffer: " (remove nil (mapcar 'buffer-name (persp-buffers (persp-curr))))
-                :keymap ivy-switch-buffer-map
-                :preselect (buffer-name (other-buffer (current-buffer)))
-                :action #'ivy--switch-buffer-action
-                :matcher #'ivy--switch-buffer-matcher
-                :caller 'ivy-switch-buffer)))
-  (with-eval-after-load 'ivy
-    (define-key ivy-mode-map (kbd "C-x b") 'ivy-switch-to-buffer))
-
-  (defun ivy-switch-buffer-with-persp (&optional _)
-    "Clone from persp-switch-to-buffer."
-    (interactive)
-    (let (buffer)
-      (setq buffer (window-normalize-buffer-to-switch-to (read-buffer-to-switch "Switch to buffer: ")))
-      (if (memq buffer (persp-buffers (persp-curr)))
-          (switch-to-buffer buffer)
-        (let ((other-persp (persp-buffer-in-other-p buffer)))
-          (when (eq (car-safe other-persp) (selected-frame))
-            (persp-switch (cdr other-persp)))
-          (switch-to-buffer buffer)))))
-  (with-eval-after-load 'ivy
-    (ivy-add-actions
-     'ivy-switch-buffer
-     '(("p" ivy-switch-buffer-with-persp "persp-switch-to-buffer"))))
-
-  ;; find file with perspective and projectile
-  (defun counsel-find-file-action (x)
-    "Find file X."
-    (with-ivy-window
-      (if (and counsel-find-file-speedup-remote
-               (file-remote-p ivy--directory))
-          (let ((find-file-hook nil))
-            (find-file (expand-file-name x ivy--directory)))
-        (if (and (bound-and-true-p persp-mode) (bound-and-true-p projectile-mode))
-            (let (project-name (project-name-root (projectile-project-root (expand-file-name x))))
-              (when project-name-root
-                (setq project-name (funcall projectile-project-name-function project-name-root))
-                (persp-switch project-name))))
-        (find-file (expand-file-name x ivy--directory))))))
-
-(with-eval-after-load 'counsel-projectile
-  (advice-patch 'counsel-projectile-switch-project-by-name
-                '(run-hook-with-args 'projectile-before-switch-project-hook
-                                     (funcall projectile-project-name-function project))
-                '(run-hooks 'projectile-before-switch-project-hook))
-  (add-hook 'projectile-before-switch-project-hook
-            (lambda (project-to-switch)
-              (if (and project-to-switch (bound-and-true-p persp-mode))
-                  (persp-switch project-to-switch))))
-  (defun counsel-projectile-find-file-action-find-file-jump (file)
-    "Call `counsel-find-file' from FILE's directory."
-    (let* ((f (projectile-expand-root file))
-           (default-directory (file-name-directory f)))
-      (counsel-file-jump)))
-  (ivy-add-actions
-   'counsel-projectile
-   '(("f" counsel-projectile-find-file-action-find-file-jump
-      "counsel-file-jump")))
-  (ivy-add-actions
-   'counsel-projectile-find-file
-   '(("f" counsel-projectile-find-file-action-find-file-jump
-      "counsel-file-jump"))))
+;; dockerfile-mode
+(use-package dockerfile-mode
+  :defer t
+  :hook (dockerfile-mode . whitespace-mode))
 
 ;; keep personal settings not in the .emacs file
-(let ((personal-settings "~/.emacs.d/personal.el"))
+(let ((personal-settings (expand-file-name "personal.el" user-emacs-directory)))
   (when (file-exists-p personal-settings)
     (load-file personal-settings)))
 
