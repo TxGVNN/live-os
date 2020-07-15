@@ -1,10 +1,22 @@
 ;;; .emacs --- initialization file
-;;; Commentary: by TxGVNN
+;;; _____  _     __    _      _      _
+;;;  | |  \ \_/ / /`_ \ \  / | |\ | | |\ |
+;;;  |_|  /_/ \ \_\_/  \_\/  |_| \| |_| \|
+;;;
+;;; [ @author TxGVNN ]
 
 ;;; Code:
 (when (version< emacs-version "25.1")
   (error "Requires GNU Emacs 25.1 or newer, but you're running %s" emacs-version))
-(setq gc-cons-threshold (* 64 1024 1024))
+
+(setq gc-cons-threshold most-positive-fixnum) ;; enable gcmh
+;; doom-emacs:docs/faq.org#unset-file-name-handler-alist-temporarily
+(defvar doom--file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq file-name-handler-alist doom--file-name-handler-alist)))
+(defvar hidden-minor-modes '(whitespace-mode))
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
@@ -18,39 +30,45 @@
   (package-install 'use-package))
 
 ;;; PACKAGES
+;; gcmh
+(use-package gcmh
+  :ensure t
+  :init (gcmh-mode)
+  :config (add-to-list 'hidden-minor-modes 'gcmh-mode))
+
 ;; ivy
 (use-package ivy
   :ensure t :pin me
   :bind ("C-x C-r" . ivy-resume)
   :init
-  (setq ivy-extra-directories '("./"))
-  (setq ivy-on-del-error-function #'ignore)
-  (setq ivy-magic-tilde nil)
-  (setq ivy-magic-slash-non-match-action 'ivy-magic-slash-non-match-action)
-  :config
-  (define-key ivy-minibuffer-map (kbd "TAB") 'ivy-partial)
-  (ivy-mode))
+  (setq ivy-magic-tilde nil
+        ivy-extra-directories '("./")
+        ivy-on-del-error-function #'ignore
+        ivy-magic-slash-non-match-action 'ivy-magic-slash-non-match-action)
+  (add-to-list 'hidden-minor-modes 'ivy-mode)
+  (ivy-mode)
+  :config (define-key ivy-minibuffer-map (kbd "TAB") 'ivy-partial))
 
 ;; counsel
 (use-package counsel
   :ensure t :pin me
+  :init (counsel-mode)
   :bind
-  ("M-x" . counsel-M-x)
   ("M-X" . execute-extended-command)
-  ("C-x C-f" . counsel-find-file)
-  ("C-x B" . counsel-switch-buffer)
-  ("C-c m" . counsel-imenu)
-  ("M-y" . counsel-yank-pop)
   ("M-Y" . yank-pop)
+  ("C-c m" . counsel-imenu)
   ("M-s d" . counsel-ag)
-  ("C-h b" . counsel-descbinds)
+  ("M-s r" . counsel-rg)
+  ("M-s j" . counsel-file-jump)
   (:map counsel-find-file-map ("C-k" . counsel-up-directory))
   :hook
   (org-mode . (lambda() (define-key org-mode-map (kbd "C-c m") 'counsel-org-goto)))
   :config
+  (add-to-list 'hidden-minor-modes 'counsel-mode)
   (setq counsel-yank-pop-separator
-        (concat "\n" (apply 'concat (make-list 25 "---")) "\n"))
-  (setq counsel-find-file-at-point t)
+        (concat "\n" (apply 'concat (make-list 25 "---")) "\n")
+        enable-recursive-minibuffers t
+        counsel-find-file-at-point t)
   (use-package smex :ensure t))
 
 ;; swiper
@@ -71,8 +89,8 @@
 (use-package avy
   :ensure t
   :config
-  (setq avy-all-windows nil)
-  (setq avy-background t)
+  (setq avy-all-windows nil
+        avy-background t)
   :bind
   ("M-g a" . avy-goto-char)
   ("M-g l" . avy-goto-line))
@@ -92,7 +110,7 @@
   ("C-c r" . crux-rename-buffer-and-file)
   ("C-c t" . crux-visit-term-buffer)
   ("C-h RET" . crux-find-user-init-file)
-  ("C-x x e" . crux-open-with)
+  ("C-x / e" . crux-open-with)
   ("C-x 7" . crux-swap-windows))
 
 ;; move-text
@@ -104,14 +122,26 @@
 
 ;; switch-window
 (use-package ace-window
-  :ensure t
-  :init (global-set-key (kbd "C-x o") 'ace-window)
-  :config (setq aw-scope (quote frame)))
+  :ensure t :defer t
+  :bind ("C-x o" . ace-window)
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
+        aw-scope (quote frame)))
+
+;; xclip -- don't use xsel
+(use-package xclip
+  :ensure t :defer t
+  :init
+  (add-hook 'tty-setup-hook
+            (lambda()(require 'xclip nil t)(xclip-mode))))
 
 ;; checker kbd("C-h .")
 (if (version< emacs-version "26.1")
     (use-package flycheck
       :ensure t
+      :config
+      (defun flycheck-display-error-at-point-soon () nil)
+      (setq flycheck-highlighting-mode (quote columns))
       :hook (prog-mode . flycheck-mode))
   (use-package flymake
     :config
@@ -133,24 +163,24 @@
 ;; magit
 (use-package magit
   :ensure t
-  :config (define-key magit-file-mode-map (kbd "C-x g") nil)
   :bind
   ("C-x g g" . magit-status)
   ("C-x g f" . magit-find-file)
   ("C-x M-g" . magit-dispatch)
-  ("C-c M-g" . magit-file-dispatch))
+  ("C-c M-g" . magit-file-dispatch)
+  (:map magit-file-mode-map ("C-x g") nil))
 
 ;; projectile
 (use-package projectile
-  :ensure t
+  :ensure t :defer t
   :init
   (setq projectile-dynamic-mode-line nil)
   (setq projectile-mode-line-prefix "")
   (setq projectile-project-compilation-cmd "make ")
   (setq projectile-completion-system 'ivy)
-  :config
-  (define-key projectile-mode-map (kbd "C-x p") 'projectile-command-map)
-  (projectile-mode))
+  (projectile-mode)
+  :bind
+  (:map projectile-mode-map ("C-x p" . projectile-command-map)))
 ;; counsel-projectile
 (use-package counsel-projectile
   :ensure t :defer t
@@ -159,18 +189,29 @@
   (define-key projectile-mode-map [remap projectile-switch-project] #'counsel-projectile-switch-project)
   (define-key projectile-mode-map [remap projectile-find-file] #'counsel-projectile-find-file)
   (define-key projectile-mode-map [remap projectile-ag] #'counsel-projectile-ag)
+  (define-key projectile-mode-map [remap projectile-ripgrep] #'counsel-projectile-rg)
   (define-key projectile-mode-map [remap projectile-compile-project] #'counsel-compile))
+;; ibuffer-projectile
+(use-package ibuffer-projectile
+  :ensure t
+  :config
+  (setq ibuffer-projectile-prefix "")
+  (add-hook 'ibuffer-hook
+            (lambda ()
+              (ibuffer-projectile-set-filter-groups)
+              (unless (eq ibuffer-sorting-mode 'alphabetic)
+                (ibuffer-do-sort-by-alphabetic)))))
 
 ;; perspective
 (use-package perspective
   :ensure t
   :init
-  (setq persp-mode-prefix-key (kbd "C-z"))
-  (setq persp-initial-frame-name "0")
+  (setq persp-mode-prefix-key (kbd "C-z")
+        persp-initial-frame-name "0")
   (persp-mode)
-  :config
-  (global-set-key (kbd "<f5>") 'persp-switch-last)
-  (define-key perspective-map (kbd "z") 'perspective-map))
+  :bind
+  ("C-x x" . persp-switch-last)
+  (:map perspective-map ("z" . perspective-map)))
 
 ;; multiple-cursors
 (use-package multiple-cursors
@@ -188,6 +229,7 @@
   :config (require 'smartparens-config)
   (add-hook 'multiple-cursors-mode-enabled-hook (lambda()(turn-off-smartparens-mode)))
   (add-hook 'multiple-cursors-mode-disabled-hook (lambda()(turn-on-smartparens-mode)))
+  (add-to-list 'hidden-minor-modes 'smartparens-mode)
   :bind (:map smartparens-mode-map
               ("C-M-f" . 'sp-forward-sexp)
               ("C-M-b" . 'sp-backward-sexp))
@@ -199,7 +241,8 @@
 ;; volatile-highlights
 (use-package volatile-highlights
   :ensure t
-  :config (volatile-highlights-mode))
+  :init (volatile-highlights-mode)
+  :config (add-to-list 'hidden-minor-modes 'volatile-highlights-mode))
 ;; anzu
 (use-package anzu
   :ensure t
@@ -209,14 +252,12 @@
   (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
   (define-key isearch-mode-map [remap isearch-query-replace]  #'anzu-isearch-query-replace)
   (define-key isearch-mode-map [remap isearch-query-replace-regexp] #'anzu-isearch-query-replace-regexp)
-  :config (global-anzu-mode))
+  (global-anzu-mode))
 ;; symbol-overlay
 (use-package symbol-overlay
   :ensure t
   :config
-  (define-key symbol-overlay-map (kbd "N") 'symbol-overlay-switch-forward)
-  (define-key symbol-overlay-map (kbd "P") 'symbol-overlay-switch-backward)
-  (define-key symbol-overlay-map (kbd "c") 'symbol-overlay-remove-all)
+  (add-to-list 'hidden-minor-modes 'symbol-overlay-mode)
   :bind ("M-s H" . symbol-overlay-put)
   :hook (prog-mode . symbol-overlay-mode))
 
@@ -226,10 +267,12 @@
   :config
   (define-key yas-minor-mode-map [(tab)] nil)
   (define-key yas-minor-mode-map (kbd "TAB") nil)
-  (define-key yas-minor-mode-map (kbd "C-c y i") 'yas-insert-snippet)
-  (define-key yas-minor-mode-map (kbd "C-c y n") 'yas-new-snippet)
-  (define-key yas-minor-mode-map (kbd "C-c y v") 'yas-visit-snippet-file)
-  (define-key yas-minor-mode-map (kbd "C-c y TAB") yas-maybe-expand)
+  :bind
+  (:map yas-minor-mode-map
+        ("C-c y i" . yas-insert-snippet)
+        ("C-c y n" . yas-new-snippet)
+        ("C-c y v" . yas-visit-snippet-file)
+        ("C-c y TAB" . yas-maybe-expand))
   :hook
   ((prog-mode org-mode markdown-mode)
    . yas-minor-mode))
@@ -240,11 +283,15 @@
 ;; company
 (use-package company
   :ensure t
-  :init (setq company-lighter-base "@")
+  :init (global-company-mode)
   :bind ("M-]" . company-complete-custom)
+  (:map company-active-map
+        ("C-n" . company-select-next)
+        ("C-p" . company-select-previous))
   :config
-  (define-key company-active-map (kbd "C-n") #'company-select-next)
-  (define-key company-active-map (kbd "C-p") #'company-select-previous)
+  (setq company-lighter-base "@"
+        company-require-match 'never
+        company-idle-delay 0.1)
   (defun company-complete-custom (&optional prefix)
     "Company and Yasnippet(PREFIX)."
     (interactive "P")
@@ -253,32 +300,26 @@
     (if prefix
         (if (not company-mode) (yas-expand)
           (call-interactively 'company-yasnippet))
-      (call-interactively 'company-complete)))
-  (global-company-mode))
+      (call-interactively 'company-complete))))
 
 ;; undo-tree
 (use-package undo-tree
   :ensure t
   :init
-  (setq undo-tree-mode-lighter "")
-  (setq undo-tree-history-directory-alist
+  (setq undo-tree-mode-lighter ""
+        undo-tree-history-directory-alist
         `((".*" . ,temporary-file-directory)))
-  (setq undo-tree-auto-save-history t)
-  :config (global-undo-tree-mode))
+  (global-undo-tree-mode))
 
 ;; themes
 (use-package doom-themes
-  :ensure t
-  :init (load-theme 'doom-gruvbox t)
-  :config (doom-themes-org-config))
-
+  :ensure t :pin me
+  :init (load-theme 'doom-one t)
+  :config
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config))
+
 ;;; OPTIONS
-;; vlf - view large files
-(use-package vlf :ensure t :defer t)
-;; which-key
-(cond ((package-installed-p 'which-key)
-       (setq which-key-lighter "")
-       (which-key-mode)))
 ;; google-translate
 (use-package google-translate
   :config
@@ -297,7 +338,7 @@
 (use-package git-link
   :defer t
   :init (setq git-link-use-commit t))
-
+
 ;;; HOOKS
 (defun add-to-hooks (func &rest hooks)
   "Add FUNC to mutil HOOKS."
@@ -309,24 +350,37 @@
 ;; flymake on g-n & g-p bindings
 (add-hook 'flymake-mode-hook
           (lambda()
-            (setq next-error-function #'flymake-goto-next-error)
-            (setq previous-error-function #'flymake-goto-prev-error)))
+            (setq next-error-function #'flymake-goto-next-error
+                  previous-error-function #'flymake-goto-prev-error)))
 ;; Apply .dir-locals to major-mode after load .dir-local
 ;; https://stackoverflow.com/questions/19280851/how-to-keep-dir-local-variables-when-switching-major-modes
 (add-hook 'after-change-major-mode-hook 'hack-local-variables)
 
+;; large-file
+(defun find-file-with-large-file-hook ()
+  "If a file is over a given size, make the buffer read only."
+  (when (> (buffer-size) 7340032) ;; (* 7 1024 1024)
+    (setq buffer-read-only t)
+    (buffer-disable-undo)
+    (fundamental-mode)))
+(add-hook 'find-file-hook 'find-file-with-large-file-hook)
+
 ;; hide the minor modes
-(defvar hidden-minor-modes
-  '(whitespace-mode ivy-mode smartparens-mode volatile-highlights-mode symbol-overlay-mode))
 (defun purge-minor-modes ()
   "Dont show on modeline."
   (dolist (x hidden-minor-modes nil)
     (let ((trg (cdr (assoc x minor-mode-alist))))
       (when trg (setcar trg "")))))
 (add-hook 'after-change-major-mode-hook 'purge-minor-modes)
-
+
 ;;; CUSTOMIZE
 ;; defun
+(defun my-kill-ring-save ()
+  "Better than kill-ring-save"
+  (interactive)
+  (if (not mark-active)
+      (kill-ring-save (point) (line-end-position))
+    (call-interactively 'kill-ring-save)))
 (defun indent-and-delete-trailing-whitespace ()
   "Indent and delete trailing whitespace in buffer."
   (interactive)
@@ -353,21 +407,6 @@
   (split-window-horizontally)
   (other-window 1 nil)
   (if (= prefix 1 ) (switch-to-next-buffer)))
-(defun copy-to-clipboard ()
-  "Copy to clipboard."
-  (interactive)
-  (if (display-graphic-p)
-      (progn (call-interactively 'clipboard-kill-ring-save))
-    (if (region-active-p)
-        (progn
-          (shell-command-on-region (region-beginning) (region-end) "xsel -i -b")
-          (deactivate-mark)))))
-(defun paste-from-clipboard ()
-  "Paste from clipboard."
-  (interactive)
-  (if (display-graphic-p)
-      (progn (clipboard-yank))
-    (insert (shell-command-to-string "xsel -o -b"))))
 (defun mark-backword (&optional arg allow-extend)
   "Reverse of mark-word(ARG ALLOW-EXTEND)."
   (interactive "P\np")
@@ -399,19 +438,32 @@
   (let ((filename (if (equal major-mode 'dired-mode) default-directory
                     (buffer-file-name))))
     (when filename
-      (shell-command (format "stat %s; file %s" filename filename)))))
+      (shell-command (format "stat '%s'; file '%s'" filename filename)))))
+(defun copy-region-to-scratch (&optional file)
+  "Copy region to a new scratch."
+  (interactive)
+  (let* ((string
+          (cond
+           ((and (bound-and-true-p rectangle-mark-mode) (use-region-p))
+            (mapconcat 'concat (extract-rectangle (region-beginning) (region-end)) "\n"))
+           ((use-region-p) (buffer-substring-no-properties (point) (mark)))
+           (t (buffer-substring (point-min) (point-max)))))
+         (buffer-name (format "%s_%s" (file-name-base (buffer-name)) (format-time-string "%y%m%d_%H%M%S")))
+         (buffer (get-buffer-create buffer-name)))
+    (with-current-buffer buffer
+      (insert string)
+      (if file (write-file file nil))
+      (switch-to-buffer (current-buffer)))))
 (defun save-region-to-temp ()
   "Save region to a new temp file."
   (interactive)
   (let ((filename
          (make-temp-file
           (format "%s_%s_" (file-name-base (buffer-name))
-                  (format-time-string "%Y%m%d_%H%M" (time-to-seconds)))
+                  (format-time-string "%y%m%d_%H%M" (time-to-seconds)))
           nil (file-name-extension (buffer-name) t))))
-    (if (region-active-p)
-        (write-region (point) (mark) filename)
-      (write-region (point-min) (point-max) filename))
-    (switch-to-buffer (find-file-noselect filename))))
+    (copy-region-to-scratch filename)))
+
 (defun eww-search-local-help ()
   "Search with keyword from local-help."
   (interactive)
@@ -422,7 +474,7 @@
 - DOWNLOADS: The max-downloads"
   (interactive "p")
   (let ((temp-file
-         (make-temp-file ".sharing." nil (file-name-extension (buffer-name) t)))
+         (make-temp-file nil nil (file-name-extension (buffer-name) t)))
         (url "https://transfersh.com")
         (msg "") file-hash)
     (if (region-active-p)
@@ -434,13 +486,15 @@
           (shell-command (format "openssl aes-256-cbc -md md5 -k %s -in '%s' -out '%s.enc'"
                                  file-hash temp-file temp-file))
           (dired-delete-file temp-file)
-          (setq temp-file (format "%s.enc" temp-file))
-          (setq msg (format "| openssl aes-256-cbc -d -md md5 -k %s -in - 2>/dev/null"
+          (setq temp-file (format "%s.enc" temp-file)
+                msg (format "| openssl aes-256-cbc -d -md md5 -k %s -in - 2>/dev/null"
                             file-hash))))
-      (message "curl -L %s 2>/dev/null %s"
-               (shell-command-to-string
-                (format "curl -q -H 'Max-Downloads: %d' --upload-file '%s' %s 2>/dev/null"
-                        downloads temp-file url)) msg)
+      (let ((output (format
+                     "curl -L %s 2>/dev/null %s"
+                     (shell-command-to-string
+                      (format "curl -q -H 'Max-Downloads: %d' --upload-file '%s' %s 2>/dev/null"
+                              downloads temp-file url)) msg)))
+        (kill-new output) (message output))
       (dired-delete-file temp-file))))
 
 (defun share-to-paste.debian.net ()
@@ -448,19 +502,19 @@
 - DOWNLOADS: The max-downloads"
   (interactive)
   (let ((temp-file
-         (make-temp-file ".sharing." nil (file-name-extension (buffer-name) t)))
+         (make-temp-file nil nil (file-name-extension (buffer-name) t)))
         (msg "") file-hash)
     (if (region-active-p)
         (write-region (point) (mark) temp-file)
       (write-region (point-min) (point-max) temp-file))
     (when (yes-or-no-p "Share to paste.debian.net?")
       (when (yes-or-no-p "Encrypt?")
-        (let (( file-hash (md5 (buffer-string))))
+        (let ((file-hash (md5 (buffer-string))))
           (shell-command (format "openssl aes-256-cbc -md md5 -k %s -in '%s' | base64 > '%s.enc'"
                                  file-hash temp-file temp-file))
           (dired-delete-file temp-file)
-          (setq temp-file (format "%s.enc" temp-file))
-          (setq msg (format "| base64 -d | openssl aes-256-cbc -d -md md5 -k %s -in - 2>/dev/null"
+          (setq temp-file (format "%s.enc" temp-file)
+                msg (format "| base64 -d | openssl aes-256-cbc -d -md md5 -k %s -in - 2>/dev/null"
                             file-hash))))
       (find-file-read-only temp-file)
       (debpaste-paste-buffer (get-file-buffer temp-file))
@@ -486,7 +540,7 @@
         (goto-line (read-number "Goto line: ")))
     (funcall linum-func 0)))
 (global-set-key [remap goto-line] #'goto-line-with-feedback)
-
+
 ;;; MODELINE
 (setq mode-line-position
       '((line-number-mode ("(%l" (column-number-mode ",%c")))
@@ -533,7 +587,6 @@
 
 ;; isearch
 (global-set-key (kbd "M-s s") 'isearch-forward-regexp)
-(global-set-key (kbd "M-s r") 'isearch-backward-regexp)
 (define-key isearch-mode-map (kbd "M-s %") 'isearch-query-replace-regexp)
 ;; term
 (with-eval-after-load 'term
@@ -549,6 +602,7 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 (global-set-key (kbd "M-D") 'kill-whole-line)
+(global-set-key (kbd "M-w") 'my-kill-ring-save)
 (global-set-key (kbd "C-x C-@") 'pop-to-mark-command)
 (global-set-key (kbd "C-x C-SPC") 'pop-to-mark-command)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
@@ -559,21 +613,21 @@
 (global-set-key (kbd "M-s g") 'rgrep)
 (global-set-key (kbd "M-#") 'mark-backword)
 (global-set-key (kbd "C-M-_") 'dabbrev-completion)
-(global-set-key (kbd "C-x x .") 'delete-trailing-whitespace)
-(global-set-key (kbd "C-x x ;") 'indent-and-delete-trailing-whitespace)
-(global-set-key (kbd "C-x x b") 'rename-buffer)
-(global-set-key (kbd "C-x x o") 'org-agenda)
-(global-set-key (kbd "C-x x p") 'yank-file-path)
-(global-set-key (kbd "C-x x r") 'revert-buffer)
-(global-set-key (kbd "C-x x a") 'linux-stat-file)
-(global-set-key (kbd "C-x x n") 'insert-temp-filename)
-(global-set-key (kbd "C-x x d") 'insert-datetime)
-(global-set-key (kbd "C-x x x") 'save-region-to-temp)
-(global-set-key (kbd "C-x x s") 'share-to-online)
-(global-set-key (kbd "C-x x t") 'untabify)
-(global-set-key (kbd "C-x x T") 'tabify)
-(global-set-key (kbd "C-x x M-w") 'copy-to-clipboard)
-(global-set-key (kbd "C-x x C-y") 'paste-from-clipboard)
+(global-set-key (kbd "C-x / .") 'delete-trailing-whitespace)
+(global-set-key (kbd "C-x / ;") 'indent-and-delete-trailing-whitespace)
+(global-set-key (kbd "C-x / b") 'rename-buffer)
+(global-set-key (kbd "C-x / o") 'org-agenda)
+(global-set-key (kbd "C-x / p") 'yank-file-path)
+(global-set-key (kbd "C-x / r") 'revert-buffer)
+(global-set-key (kbd "C-x / a") 'linux-stat-file)
+(global-set-key (kbd "C-x / n") 'insert-temp-filename)
+(global-set-key (kbd "C-x / d") 'insert-datetime)
+(global-set-key (kbd "C-x / D") 'org-time-stamp)
+(global-set-key (kbd "C-x / x") 'save-region-to-temp)
+(global-set-key (kbd "C-x / c") 'copy-region-to-scratch)
+(global-set-key (kbd "C-x / s") 'share-to-online)
+(global-set-key (kbd "C-x / t") 'untabify)
+(global-set-key (kbd "C-x / T") 'tabify)
 (global-set-key (kbd "C-x 2") 'split-window-vertically-last-buffer)
 (global-set-key (kbd "C-x 3") 'split-window-horizontally-last-buffer)
 (global-set-key (kbd "C-x 4 C-v") 'scroll-other-window)
@@ -581,14 +635,16 @@
 (global-set-key (kbd "C-x 4 M-<") 'beginning-of-buffer-other-window)
 (global-set-key (kbd "C-x 4 M->") 'end-of-buffer-other-window)
 (global-set-key (kbd "M-z") 'zap-up-to-char)
+(global-set-key (kbd "ESC <up>") '(lambda () (interactive "") (previous-line 3)))
+(global-set-key (kbd "ESC <down>") '(lambda () (interactive "") (next-line 3)))
 
 (setq select-safe-coding-system-function t)
 (set-default-coding-systems 'utf-8)
 (prefer-coding-system 'utf-8)
 
-(setq auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
-      backup-directory-alist `(("." . ,(concat user-emacs-directory "backups")))
-      tramp-auto-save-directory `,(concat user-emacs-directory "backups"))
+(setq create-lockfiles nil
+      auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
+      backup-directory-alist `((".*" . ,temporary-file-directory)))
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -598,7 +654,7 @@
  '(auto-revert-check-vc-info t)
  '(auto-revert-mode-text " ~")
  '(backup-by-copying t)
- '(browse-url-browser-function (quote eww-browse-url))
+ '(browse-url-browser-function 'eww-browse-url)
  '(column-number-mode t)
  '(compilation-scroll-output t)
  '(default-input-method "vietnamese-telex")
@@ -607,44 +663,40 @@
  '(eldoc-minor-mode-string " ED")
  '(electric-indent-mode nil)
  '(enable-local-variables :all)
- '(ffap-machine-p-known (quote reject))
+ '(ffap-machine-p-known 'reject)
  '(global-hl-line-mode t)
  '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
- '(initial-major-mode (quote fundamental-mode))
+ '(initial-major-mode 'fundamental-mode)
  '(initial-scratch-message nil)
  '(kept-new-versions 6)
  '(menu-bar-mode nil)
- '(org-babel-load-languages (quote ((emacs-lisp . t) (shell . t))))
- '(org-enforce-todo-dependencies t)
- '(org-todo-keyword-faces (quote (("BLOCKED" . error) ("WIP" . warning))))
- '(org-todo-keywords
-   (quote
-    ((sequence "TODO(t)" "|" "DONE(d)")
-     (sequence "WIP(w)" "BLOCKED(b)" "|" "REJECTED(r)"))))
+ '(package-selected-packages
+   '(ztree yasnippet-snippets xclip which-key web-mode vterm volatile-highlights vlf use-package undo-tree transfer-sh terraform-doc telega symbol-overlay smtpmail-multi smex smartparens rainbow-delimiters pyvenv prescient pfuture perspective pastebin paredit org-redmine nov nhexl-mode nginx-mode multiple-cursors move-text md4rd kubernetes kubel kotlin-mode interaction-log indent-guide ibuffer-projectile guix graphviz-dot-mode google-translate god-mode go-playground gnus-summary-repo gitlab-ci-mode-flycheck github-explorer git-link git-gutter gist gif-screencast gcmh fuzzy forge flymake-shellcheck expand-region esup eslint-fix ercn erc-crypt emacsql-sqlite3 elpa-mirror elfeed dumb-jump doom-themes dockerfile-mode docker debpaste debbugs csv-mode crux counsel-projectile company-terraform company-php company-lsp company-ebdb command-log-mode benchmark-init bbdb anzu ag advice-patch ace-window 2048-game))
  '(read-quoted-char-radix 16)
  '(safe-local-variable-values
-   (quote
-    ((eval setq default-directory
-           (locate-dominating-file buffer-file-name ".dir-locals.el")))))
+   '((eval setq default-directory
+           (locate-dominating-file buffer-file-name ".dir-locals.el"))))
  '(scroll-bar-mode nil)
  '(show-paren-mode t)
- '(tab-stop-list (quote (4 8 12 16 20 24 28 32 36)))
+ '(tab-stop-list '(4 8 12 16 20 24 28 32 36))
  '(tab-width 4)
  '(tool-bar-mode nil)
  '(version-control t)
  '(whitespace-style
-   (quote
-    (face tabs trailing space-before-tab newline empty tab-mark))))
+   '(face tabs trailing space-before-tab newline empty tab-mark))
+ '(x-select-request-type '(COMPOUND_TEXT UTF8_STRING STRING TEXT)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ivy-remote ((t (:foreground "magenta"))))
  '(ivy-virtual ((t (:inherit unspecified :foreground unspecified))))
  '(symbol-overlay-default-face ((t (:inherit bold :underline t))))
+ '(telega-msg-heading ((t (:inherit bold))))
  '(vc-state-base ((t (:inherit font-lock-string-face :weight bold)))))
-
+
 ;;; PATCHING
 (use-package advice-patch :ensure t)
 
@@ -653,16 +705,20 @@
                       "Pass prefix arg as third arg to `base64-encode-region'."
                       (interactive "r\nP")))
 
-(with-eval-after-load 'flycheck
-  (defun flycheck-display-error-at-point-soon () nil)
-  (setq flycheck-highlighting-mode (quote columns)))
-
 (unless (version< emacs-version "26.1")
   (with-eval-after-load 'flymake
-    (setq byte-compile-warnings nil)
+    (setq-local byte-compile-warnings nil)
     (advice-patch 'flymake--highlight-line  '(+ 1 (flymake--diag-beg diagnostic)) '(flymake--diag-end diagnostic))
     (advice-patch 'flymake--mode-line-format '" FlyM" '" Flymake")
-    (setq byte-compile-warnings t)))
+    (setq-local byte-compile-warnings t)))
+
+(with-eval-after-load 'compile
+  (ignore-errors
+    (advice-patch 'compilation-start
+                  '(format "compliation(%s)" default-directory)
+                  '(if (eq mode t)
+                       "compilation"
+                     (replace-regexp-in-string "-mode\\'" "" (symbol-name mode))))))
 
 (with-eval-after-load 'perspective
   (defun ivy-switch-to-buffer ()
@@ -680,11 +736,26 @@
   (with-eval-after-load 'ivy
     (define-key ivy-mode-map (kbd "C-x b") 'ivy-switch-to-buffer))
 
+  (defun counsel-projectile-M-x()
+    "M-x ^project-name"
+    (interactive)
+    (counsel-M-x (format "^%s " (persp-name (persp-curr)))))
+  (define-key projectile-mode-map [remap projectile-project-buffers-other-buffer] #'counsel-projectile-M-x)
+
+  (defun counsel-switch-to-buffer ()
+    "Switch to another buffer in the CURRENT PERSP."
+    (interactive)
+    (let ((ivy-update-fns-alist
+           '((ivy-switch-buffer . counsel--switch-buffer-update-fn)))
+          (ivy-unwind-fns-alist
+           '((ivy-switch-buffer . counsel--switch-buffer-unwind))))
+      (ivy-switch-to-buffer)))
+  (global-set-key (kbd "C-x B") 'counsel-switch-to-buffer)
+
   (defun ivy-switch-buffer-with-persp (&optional _)
     "Clone from persp-switch-to-buffer."
     (interactive)
-    (let (buffer)
-      (setq buffer (window-normalize-buffer-to-switch-to (read-buffer-to-switch "Switch to buffer: ")))
+    (let ((buffer (window-normalize-buffer-to-switch-to (read-buffer-to-switch "Switch to buffer: "))))
       (if (memq buffer (persp-buffers (persp-curr)))
           (switch-to-buffer buffer)
         (let ((other-persp (persp-buffer-in-other-p buffer)))
@@ -695,6 +766,7 @@
     (ivy-add-actions
      'ivy-switch-buffer
      '(("p" ivy-switch-buffer-with-persp "persp-switch-to-buffer"))))
+
   (defun persp-update-modestring ()
     "Override persp-update-modestring."
     (when persp-show-modestring
@@ -706,6 +778,7 @@
          (append open
                  (cons (persp-format-name (persp-name (persp-curr)))())
                  close)))))
+
   ;; find file with perspective and projectile
   (with-eval-after-load 'counsel
     (defun counsel-find-file-action (x)
@@ -716,9 +789,9 @@
             (let ((find-file-hook nil))
               (find-file (expand-file-name x ivy--directory)))
           (if (and (bound-and-true-p persp-mode) (bound-and-true-p projectile-mode))
-              (let (project-name (project-name-root (projectile-project-root (expand-file-name x))))
-                (when project-name-root
-                  (setq project-name (funcall projectile-project-name-function project-name-root))
+              (let (project-name (project-root (projectile-project-root (expand-file-name x))))
+                (when project-root
+                  (setq project-name (funcall projectile-project-name-function project-root))
                   (persp-switch project-name))))
           (find-file (expand-file-name x ivy--directory)))))))
 
@@ -726,24 +799,28 @@
   (advice-patch 'counsel-projectile-switch-project-by-name
                 '(run-hook-with-args 'projectile-before-switch-project-hook project)
                 '(run-hooks 'projectile-before-switch-project-hook))
-
   (add-hook 'projectile-before-switch-project-hook
             (lambda (project-to-switch)
               (if (and project-to-switch (bound-and-true-p persp-mode))
                   (persp-switch (funcall projectile-project-name-function project-to-switch)))))
-  (defun counsel-projectile-find-file-action-find-file-jump (file)
+  (defun counsel-projectile-find-file-action-file-jump (file)
     "Call `counsel-find-file' from FILE's directory."
     (let* ((f (projectile-expand-root file))
            (default-directory (file-name-directory f)))
       (counsel-file-jump)))
   (ivy-add-actions
-   'counsel-projectile
-   '(("f" counsel-projectile-find-file-action-find-file-jump
-      "counsel-file-jump")))
+   'counsel-projectile-switch-project
+   '(("f" counsel-projectile-find-file-action-file-jump "file jump")))
+
+  (defun counsel-projectile-M-x-action(file)
+    "Call `counsel-projectile-M-x'."
+    (let* ((project-root (projectile-project-root (expand-file-name file)))
+           (project-name (funcall projectile-project-name-function project-root)))
+      (persp-switch project-name)
+      (counsel-projectile-M-x)))
   (ivy-add-actions
-   'counsel-projectile-find-file
-   '(("f" counsel-projectile-find-file-action-find-file-jump
-      "counsel-file-jump"))))
+   'counsel-projectile-switch-project
+   '(("ESC" counsel-projectile-M-x-action "M-x"))))
 
 (with-eval-after-load 'projectile
   (defun projectile-run-term (program)
@@ -758,27 +835,49 @@
           (ansi-term (or explicit-shell-file-name
                          (getenv "SHELL") "/bin/sh") termname)))
       (switch-to-buffer buffer))))
-
+
 ;;; LANGUAGES
 ;; .emacs
 (defun develop-dot()
   "Update 'user-init-file - .emacs."
   (interactive)
-  (let (upstream)
-    (setq upstream (make-temp-file ".emacs"))
+  (let ((upstream (make-temp-file ".emacs")))
     (url-copy-file "https://raw.githubusercontent.com/TxGVNN/dots/master/.emacs" upstream t)
     (diff user-init-file upstream)
     (other-window 1 nil)
     (message "Override %s by %s to update" user-init-file upstream)))
 
+(defun develop-erc ()
+  "ERC configuration"
+  (interactive)
+  (package-install 'ercn))
+(with-eval-after-load 'ercn
+  (setq ercn-notify-rules
+        '((current-nick . all)
+          (keyword . all)
+          (pal . ("#emacs"))
+          (query-buffer . all)))
+  (defun do-notify (nick msg)
+    (call-process "notify-send" nil nil nil "ERC" nick))
+  (add-hook 'ercn-notify-hook 'do-notify))
+
 ;; c-mode
 (defun my-c-mode-common-hook ()
   "C-mode hook."
   (c-set-offset 'substatement-open 0)
-  (setq c++-tab-always-indent t)
-  (setq c-basic-offset 4)
-  (setq c-indent-level 4))
+  (setq c++-tab-always-indent t
+        c-basic-offset 4
+        c-indent-level 4))
 (add-hook 'c-mode-common-hook 'my-c-mode-common-hook)
+
+;; org-mode
+(setq org-babel-load-languages (quote ((emacs-lisp . t) (shell . t)))
+      org-enforce-todo-dependencies t
+      org-todo-keyword-faces (quote (("BLOCKED" . error) ("WIP" . warning)))
+      org-todo-keywords
+      (quote
+       ((sequence "TODO(t)" "|" "DONE(d)")
+        (sequence "WIP(w)" "BLOCKED(b)" "|" "REJECTED(r)"))))
 
 ;; go-mode
 (defun develop-go()
@@ -799,12 +898,12 @@ Please install:
   (defun go-print-debug-at-point()
     "Print debug."
     (interactive)
-    (let (var)
-      (setq var (substring-no-properties (thing-at-point 'symbol)))
+    (let ((var (substring-no-properties (thing-at-point 'symbol))))
       (move-end-of-line nil)
       (newline-and-indent)
-      (insert (format "fmt.Printf(\"D: %s+%d %s, %%+v\\n\", %s)"
-                      (file-name-nondirectory (buffer-file-name)) (line-number-at-pos) var var)))))
+      (insert (format "fmt.Printf(\"D: %s@%s %s, %%+v\\n\", %s)"
+                      (file-name-nondirectory (buffer-file-name))
+                      (substring (md5 (format "%s%s" (emacs-pid) (current-time))) 0 4) var var)))))
 
 ;; python-mode
 (defun develop-python()
@@ -815,6 +914,10 @@ Please install:
   (package-install 'lsp-mode)
   (package-install 'company-lsp))
 (with-eval-after-load 'python ;; built-in
+  (setq python-indent-guess-indent-offset-verbose nil)
+  (when (and (executable-find "python3")
+             (string= python-shell-interpreter "python"))
+    (setq python-shell-interpreter "python3"))
   (defun python-docs (w)
     "Launch PyDOC on the Word at Point"
     (interactive
@@ -829,14 +932,13 @@ Please install:
   (defun python-print-debug-at-point()
     "Print debug."
     (interactive)
-    (let (var)
-      (setq var (substring-no-properties (thing-at-point 'symbol)))
+    (let ((var (substring-no-properties (thing-at-point 'symbol))))
       (move-end-of-line nil)
       (newline-and-indent)
-      (insert (format "print(\"D: %s+%d %s, {}\".format(%s))"
-                      (file-name-nondirectory (buffer-file-name)) (line-number-at-pos) var var)))))
+      (insert (format "print(\"D: %s@%s %s, {}\".format(%s))"
+                      (file-name-nondirectory (buffer-file-name))
+                      (substring (md5 (format "%s%s" (emacs-pid) (current-time))) 0 4) var var)))))
 (add-hook 'python-mode-hook #'lsp-deferred)
-
 
 ;; php-mode
 (defun develop-php()
@@ -879,8 +981,7 @@ Please install:
               (yas-minor-mode-on))))
 (use-package ansible-doc
   :defer t
-  :config
-  (define-key ansible-doc-mode-map (kbd "M-?") #'ansible-doc))
+  :config (define-key ansible-doc-mode-map (kbd "M-?") #'ansible-doc))
 
 ;; java-mode
 (defun develop-java()
@@ -893,8 +994,7 @@ tar -vxf jdt-language-server-latest.tar.gz -C ~/.emacs.d/eclipse.jdt.ls/server/"
   (package-install 'company-lsp))
 (use-package lsp-java
   :defer t
-  :init
-  (add-hook 'java-mode-hook #'lsp-deferred))
+  :init (add-hook 'java-mode-hook #'lsp-deferred))
 ;; html-mode
 (defun develop-html()
   "HTML development."
@@ -914,8 +1014,7 @@ npm i -g javascript-typescript-langserver"
   (package-install 'eslint-fix))
 (use-package web-mode
   :defer t
-  :init
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . web-mode)))
+  :init (add-to-list 'auto-mode-alist '("\\.js\\'" . web-mode)))
 
 ;; gitlab-mode
 (defun develop-gitlab-ci()
@@ -925,19 +1024,12 @@ npm i -g javascript-typescript-langserver"
   (package-install 'gitlab-ci-mode-flycheck))
 (defun gitlab-ci-mode-my-hook ()
   (gitlab-ci-mode-flycheck-enable)
-  (if (fboundp 'flycheck-mode)
-      (flycheck-mode)))
+  (if (fboundp 'flycheck-mode) (flycheck-mode)))
 (add-hook 'gitlab-ci-mode-hook 'gitlab-ci-mode-my-hook)
 
-;; yaml-mode
-(use-package yaml-mode
-  :defer t
-  :hook (yaml-mode . whitespace-mode))
-
-;; dockerfile-mode
-(use-package dockerfile-mode
-  :defer t
-  :hook (dockerfile-mode . whitespace-mode))
+;; other modes
+(add-to-hooks 'whitespace-mode
+              'yaml-mode-hook 'dockerfile-mode-hook)
 
 ;; keep personal settings not in the .emacs file
 (let ((personal-settings (expand-file-name "personal.el" user-emacs-directory)))

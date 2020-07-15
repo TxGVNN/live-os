@@ -3,7 +3,6 @@ alsa-utils
 apt-file
 build-essential
 chromium
-conky-all
 console-setup
 cryptsetup-bin
 curl
@@ -24,6 +23,7 @@ gparted
 gpgsm
 htop
 i3
+i3blocks
 i3lock
 ibus-unikey
 keepassxc

@@ -47,7 +47,7 @@ URxvt*scrollTtyOutput:           true
 ! URxvt*pointerBlank:                   boolean
 ! URxvt.keysym.Control-0x2b: perl:font-size:increase
 ! URxvt.keysym.Control-0x2d: perl:font-size:decrease
-URxvt*background:                     #0e0e0e
+URxvt*background:                     #1a1a1a
 URxvt*foreground:                     #c0b18b
 xterm*background:                     #1f1f1f
 xterm*foreground:                     #c0b18b
@@ -137,7 +137,7 @@ URxvt*depth:                         32
 ! URxvt*secondaryScroll:                boolean
 URxvt*perl-lib:                       /usr/lib/urxvt/perl/
 ! URxvt*perl-eval:                      perl-eval
-URxvt*perl-ext-common:               default,matcher,selection-to-clipboard
+URxvt*perl-ext-common:               default,selection-to-clipboard,font-size
 ! URxvt*perl-ext:                       string
 ! URxvt*iso14755:                       boolean
 ! URxvt*iso14755_52:                    boolean

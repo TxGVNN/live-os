@@ -13,6 +13,7 @@ set $tag8 
 set $tag9 
 set $tag0 
 
+# i3 config file (v4)
 set $mod Mod4
 
 font pango:DejaVu Sans Mono 8
@@ -28,6 +29,12 @@ bindsym $mod+Return exec i3-sensible-terminal
 # kill focused window
 bindsym $mod+Shift+q kill
 
+# start dmenu (a program launcher)
+#bindsym $mod+d exec dmenu_run
+# There also is the (new) i3-dmenu-desktop which only displays applications
+# shipping a .desktop file. It is a wrapper around dmenu, so you need that
+# installed.
+#bindsym $mod+d exec --no-startup-id i3-dmenu-desktop --dmenu="dmenu -b -nb '#011015' -sb '#567ec5' -sf '#000000' -fn 'Terminus-11' -l 10"
 bindsym $mod+d exec --no-startup-id i3-dmenu-desktop
 # Workspace toggle $mod + 'q'
 bindsym $mod+q workspace back_and_forth
@@ -123,13 +130,21 @@ bindsym $mod+Shift+9 move container to workspace number 9 $tag9
 bindsym $mod+Shift+0 move container to workspace $tag0
 
 # rename workspace
-bindsym $mod+t exec ~/.i3/bin/tags
+bindsym $mod+t exec ~/.i3/bin/tags num
+bindsym $mod+Shift+t exec ~/.i3/bin/tags
+bindsym $mod+n exec ~/.i3/bin/tags temp
+bindsym $mod+Shift+n exec ~/.i3/bin/tags temp-move
+# reminder
+bindsym $mod+apostrophe exec i3-input -F "exec sh -c 'sleep %s && notify-send Remember-%ss-ago!'" -P 'Remind after: '
 # [move to] new workspace
 bindsym $mod+i exec i3-input -F "workspace \"%s\"" -P 'Workspace: '
 bindsym $mod+Shift+i exec i3-input -F "move container to workspace \"%s\"" -P 'Move to workspace: '
 # mark container
 bindsym $mod+m exec i3-input -F 'mark %s' -P 'Mark name: '
 bindsym $mod+Shift+m exec i3-input -F '[con_mark=%s] focus' -P 'Go to mark: '
+# copy to register ($mod+~, $mod+Shift+~)
+bindcode $mod+49 exec ~/.i3/bin/x-register
+bindcode $mod+Shift+49 exec ~/.i3/bin/x-register copy
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
@@ -229,20 +244,24 @@ bindsym $mod+r mode "resize"
 bindsym $mod+b bar mode toggle
 bar {
         i3bar_command /usr/bin/i3bar
-        status_command ~/.i3/bin/conky-i3bar
-        font pango:DejaVu Sans Mono, FontAwesome 8
+        status_command i3blocks -c ~/.i3/i3blocks.conf
+        # status_command i3status -c ~/.i3/i3status.conf
+        # status_command ~/.i3/bin/conky-i3bar
+        font pango:DejaVu Sans Mono 9
         tray_output primary
         position top
         # font pango:Terminus 8
         colors {
-            background #202020
+            # background #202020
             separator #202020
-            statusline #ffffff
-            focused_workspace  #AAAAAA #000000 #DDDDDD
-            active_workspace   #000000 #808080 #336633
-            inactive_workspace #606060 #808080 #000000
-            urgent_workspace   #AAAAAA #e60000 #ffffff
+            # statusline #88ABC4
+            # focused_workspace  #AAAAAA #000000 #DDDDDD
+            # active_workspace   #000000 #808080 #336633
+            # inactive_workspace #606060 #808080 #000000
+            # urgent_workspace   #AAAAAA #e60000 #ffffff
         }
+        # bindsym button1 nop
+        # bindsym button2 nop
 }
 # define color
 set $bg     #2c2c2e
@@ -259,27 +278,30 @@ set $id     #1c4a1c
 set $ce     #ceecee
 
 # set some nice colors      border  background  text    indicator
-client.focused              $id     $ac        $tx     $id
-client.unfocused            $bg     $bg         $ia     $id
-client.focused_inactive     $bg     $bg         $ac     $id
+# client.focused              $id     $ac        $tx     $id
+# client.unfocused            $bg     $bg         $ia     $id
+# client.focused_inactive     $bg     $bg         $ac     $id
 #client.urgent               $yw     $yw         $tx     $id
 
 # start application
 exec --no-startup-id feh --bg-fill ~/.i3/background.bmp
-#exec --no-startup-id conky -d -c ~/.i3/conky-right
-exec --no-startup-id conky -d -c ~/.i3/conky-left
-#exec --no-startup-id conky -d -c ~/.i3/conky-bottom
-#exec --no-startup-id ~/.i3/bin/bar
-#exec --no-startup-id ~/.i3/bin/xinput-fix
+# exec --no-startup-id conky -d -c ~/.i3/conky-right
+# exec --no-startup-id conky -d -c ~/.i3/conky-left
+# exec --no-startup-id conky -d -c ~/.i3/conky-bottom
+exec --no-startup-id ~/.i3/bin/bar
+exec --no-startup-id ~/.i3/bin/xinput-fix
 exec --no-startup-id dunst
 exec --no-startup-id ibus-daemon --xim -d -r
+exec --no-startup-id dconf write /desktop/ibus/general/engines-order "['xkb:us::eng', 'Unikey']"
 exec --no-startup-id xautolock -time 5 -locker '~/.i3/bin/i3lock.sh'
-exec --no-startup-id redshift
+exec --no-startup-id ~/.i3/bin/redshift
+# exec --no-startup-id setxkbmap -layout us -option ctrl:nocaps
 
 # lock screen
-bindsym XF86ScreenSaver exec ~/.i3/bin/i3lock.sh
-bindsym $mod+Mod1+l exec ~/.i3/bin/i3lock.sh
-bindsym control+Mod1+Delete exec ~/.i3/bin/i3lock.sh
+bindsym --release XF86ScreenSaver exec ~/.i3/bin/i3lock.sh
+bindsym --release $mod+Delete exec ~/.i3/bin/i3lock.sh
+bindsym --release $mod+Mod1+l exec ~/.i3/bin/i3lock.sh
+bindsym --release control+Mod1+Delete exec ~/.i3/bin/i3lock.sh
 
 # Pulse Audio controls
 bindsym XF86AudioRaiseVolume exec --no-startup-id amixer -q sset Master 3%+
@@ -287,19 +309,33 @@ bindsym XF86AudioLowerVolume exec --no-startup-id amixer -q sset Master 3%-
 bindsym XF86AudioMute exec --no-startup-id amixer -q sset Master toggle # mute sound
 
 # Sreen brightness controls
-bindsym XF86MonBrightnessUp exec xbacklight -inc 10 # increase screen brightness
-bindsym XF86MonBrightnessDown exec xbacklight -dec 10 # decrease screen brightness
+bindsym XF86MonBrightnessUp exec xbacklight -inc 5 # increase screen brightness
+bindsym XF86MonBrightnessDown exec xbacklight -dec 5 # decrease screen brightness
 
 # Touchpad controls
-bindsym XF86Sleep exec ~/.i3/bin/i3lock.sh && systemctl suspend
+bindsym --release XF86Sleep exec ~/.i3/bin/i3lock.sh && systemctl suspend
 
 # Screenshot
-bindsym Print exec scrot 'scrot_%Y-%m-%d-%T_$wx$h.png' -e 'mv $f ~/Pictures/'
+bindsym Print exec scrot 'scrot_%Y-%m-%d-%T_$wx$h.png' -e 'mv $f /tmp/'
 bindsym $mod+Print exec gnome-screenshot -i -a
 
 # Toggle fastly terminal
-bindsym $mod+F1 exec ~/.i3/bin/fn 1
+bindsym $mod+Escape exec ~/.i3/bin/fn esc
 bindsym $mod+F12 exec ~/.i3/bin/fn 12
+
+# More workspaces
+bindsym $mod+F1 workspace number 11 F1
+bindsym $mod+F2 workspace number 12 F2
+bindsym $mod+F3 workspace number 13 F3
+bindsym $mod+F4 workspace number 14 F4
+bindsym $mod+F5 workspace number 15 F5
+bindsym $mod+F6 workspace number 16 F6
+bindsym $mod+F7 workspace number 17 F7
+bindsym $mod+F8 workspace number 18 F8
+bindsym $mod+F9 workspace number 19 F9
+bindsym $mod+F10 workspace number 20 F10
+bindsym $mod+F11 workspace number 21 F11
+
 # Media player controls
 bindsym XF86AudioPlay exec mpc toggle
 bindsym XF86AudioPause exec mpc pause
@@ -309,13 +345,13 @@ bindsym XF86AudioPrev exec mpc prev
 bindsym XF86Launch1 exec xset dpms force off
 
 # Assign workspace
-assign [class="Keepassx"] $tag0
+assign [class="keepassxc"] $tag0
 
 ## shortcut
 # emacs
 bindsym $mod+Mod1+i exec emacs
 # keepassx
-bindsym $mod+Mod1+k exec keepassx
+bindsym $mod+Mod1+k exec keepassxc
 # email
 bindsym $mod+Mod1+e exec thunderbird
 # browser
