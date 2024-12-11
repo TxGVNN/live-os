@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+[ "${DEBUG:-0}" -eq 0 ] || set -x
+SHELL_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
+PATH=$SHELL_DIR:$PATH
+
+
+: "${CM_LAUNCHER=dmenu}"
+: "${CM_HISTLENGTH=8}"
+
+shopt -s nullglob
+
+cache_dir=$(clipctl cache-dir)
+cache_file=$cache_dir/line_cache
+
+# Not -h, see #142
+if [[ $1 == --help ]]; then
+    cat << 'EOF'
+clipmenu is a simple clipboard manager using dmenu and xsel. Launch this
+when you want to select a clip.
+
+All arguments are passed through to dmenu itself.
+
+Environment variables:
+
+- $CM_DIR: specify the base directory to store the cache dir in (default: $XDG_RUNTIME_DIR, $TMPDIR, or /tmp)
+- $CM_HISTLENGTH: specify the number of lines to show in dmenu/rofi (default: 8)
+- $CM_LAUNCHER: specify a dmenu-compatible launcher (default: dmenu)
+- $CM_OUTPUT_CLIP: if set, output clip selection to stdout
+EOF
+    exit 0
+fi
+
+if ! [[ -f "$cache_file" ]]; then
+    printf '%s\n' 'No cache file yet, did you run clipmenud?'
+    exit 2
+fi
+
+file_last_with_date=$(find /var/run/user/1000/clipmenu.6.txgvnn/ -type f -printf '%T+ %p\n' | sort -rn | head -n 2 | grep -v line_cache)
+file=${file_last_with_date#*\ }
+cat "$file"

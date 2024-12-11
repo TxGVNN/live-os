@@ -1,0 +1,1 @@
+/home/txgvnn/.gxt/rofs/bin/txgvnn-daemon.d

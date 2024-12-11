@@ -1,0 +1,19 @@
+# APT pinning preferences - https://wiki.debian.org/AptPreferences
+
+# install linux kernels and firmware from backports
+# Package: linux-image-*
+# Pin: release a=bookworm-backports
+# Pin-Priority: 600
+
+# Package: linux-headers-*
+# Pin: release a=bookworm-backports
+# Pin-Priority: 600
+
+# Package: firmware-*
+# Pin: release a=bookworm-backports
+# Pin-Priority: 600
+
+# install NVIDIA proprietary drivers from backports
+# Package: nvidia-driver
+# Pin: release a=bookworm-backports
+# Pin-Priority: 600
