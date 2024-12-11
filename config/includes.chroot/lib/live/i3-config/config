@@ -14,9 +14,21 @@ set $tag9 
 set $tag0 
 
 # i3 config file (v4)
+# Please see http://i3wm.org/docs/userguide.html for a complete reference!
+# Super key
 set $mod Mod4
 
+# Font for window titles. Will also be used by the bar unless a different font
+# is used in the bar {} block below.
+# This font is widely installed, provides lots of unicode glyphs, right-to-left
+# text rendering and scalability on retina/hidpi displays (thanks to pango).
 font pango:DejaVu Sans Mono 8
+# Before i3 v4.8, we used to recommend this one as the default:
+# font -misc-fixed-medium-r-normal--13-120-75-75-C-70-iso10646-1
+# The font above is very space-efficient, that is, it looks good, sharp and
+# clear in small sizes. However, its unicode glyph coverage is limited, the old
+# X core fonts rendering does not support right-to-left and this being a bitmap
+# font, it doesn’t scale on retina/hidpi displays.
 #hide_edge_borders both
 
 new_window pixel 2
@@ -25,12 +37,14 @@ floating_modifier $mod
 
 # start a terminal
 bindsym $mod+Return exec i3-sensible-terminal
+bindsym $mod+Shift+Return exec i3-sensible-terminal
 
 # kill focused window
 bindsym $mod+Shift+q kill
 
 # start dmenu (a program launcher)
-#bindsym $mod+d exec dmenu_run
+bindsym $mod+d exec dmenu_run
+bindsym $mod+Shift+d exec dmenu_run
 # There also is the (new) i3-dmenu-desktop which only displays applications
 # shipping a .desktop file. It is a wrapper around dmenu, so you need that
 # installed.
@@ -142,9 +156,9 @@ bindsym $mod+Shift+i exec i3-input -F "move container to workspace \"%s\"" -P 'M
 # mark container
 bindsym $mod+m exec i3-input -F 'mark %s' -P 'Mark name: '
 bindsym $mod+Shift+m exec i3-input -F '[con_mark=%s] focus' -P 'Go to mark: '
-# copy to register ($mod+~, $mod+Shift+~)
-bindcode $mod+49 exec ~/.i3/bin/x-register
-bindcode $mod+Shift+49 exec ~/.i3/bin/x-register copy
+# copy to register ($mod+., $mod+Shift+.)
+bindcode $mod+60 exec ~/.i3/bin/x-register
+bindcode $mod+Shift+60 exec ~/.i3/bin/x-register copy
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
@@ -152,17 +166,17 @@ bindsym $mod+Shift+r restart
 # exit i3 (logs you out of your X session)
 #bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
 #bindsym $mod+Shift+e exit
-mode "(l)ock (s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3" {
-        bindsym l exec ~/.i3/bin/i3lock.sh; mode "default"
-        bindsym s exec ~/.i3/bin/i3lock.sh && systemctl suspend; mode "default"
-        bindsym h exec ~/.i3/bin/i3lock.sh && systemctl hibernate; mode "default"
-        bindsym p exec systemctl poweroff; mode "default"
-        bindsym r exec systemctl reboot; mode "default"
+mode "($mod+l)ock ($mod+s)leep ($mod+h)ybernate ($mod+r)eboot ($mod+p)oweroff (e)xit-i3" {
+        bindsym $mod+l exec ~/.i3/bin/i3lock.sh; mode "default"
+        bindsym $mod+s exec ~/.i3/bin/i3lock.sh && systemctl suspend; mode "default"
+        bindsym $mod+h exec ~/.i3/bin/i3lock.sh && systemctl hibernate; mode "default"
+        bindsym $mod+p exec systemctl poweroff; mode "default"
+        bindsym $mod+r exec systemctl reboot; mode "default"
         bindsym e exec --no-startup-id i3-msg exit; mode "default"
         bindsym Return mode "default"
         bindsym Escape mode "default"
 }
-bindsym $mod+Shift+e mode "(l)ock (s)leep (h)ybernate (r)eboot (p)oweroff (e)xit-i3"
+bindsym $mod+Shift+e mode "($mod+l)ock ($mod+s)leep ($mod+h)ybernate ($mod+r)eboot ($mod+p)oweroff (e)xit-i3"
 
 # mouse mode
 mode "mouse" {
@@ -284,18 +298,23 @@ set $ce     #ceecee
 #client.urgent               $yw     $yw         $tx     $id
 
 # start application
+exec --no-startup-id nm-applet
 exec --no-startup-id feh --bg-fill ~/.i3/background.bmp
 # exec --no-startup-id conky -d -c ~/.i3/conky-right
 # exec --no-startup-id conky -d -c ~/.i3/conky-left
 # exec --no-startup-id conky -d -c ~/.i3/conky-bottom
-exec --no-startup-id ~/.i3/bin/bar
-exec --no-startup-id ~/.i3/bin/xinput-fix
 exec --no-startup-id dunst
 exec --no-startup-id ibus-daemon --xim -d -r
 exec --no-startup-id dconf write /desktop/ibus/general/engines-order "['xkb:us::eng', 'Unikey']"
 exec --no-startup-id xautolock -time 5 -locker '~/.i3/bin/i3lock.sh'
 exec --no-startup-id ~/.i3/bin/redshift
 # exec --no-startup-id setxkbmap -layout us -option ctrl:nocaps
+
+bindsym $mod+c exec ~/.i3/bin/dich
+bindsym $mod+Shift+p exec ~/.i3/bin/speak
+# clipboard manager
+exec --no-startup-id ~/.i3/bin/clipmenud
+bindsym $mod+Insert exec CM_OUTPUT_CLIP=1 ~/.i3/bin/clipmenu
 
 # lock screen
 bindsym --release XF86ScreenSaver exec ~/.i3/bin/i3lock.sh
@@ -316,11 +335,12 @@ bindsym XF86MonBrightnessDown exec xbacklight -dec 5 # decrease screen brightnes
 bindsym --release XF86Sleep exec ~/.i3/bin/i3lock.sh && systemctl suspend
 
 # Screenshot
-bindsym Print exec scrot 'scrot_%Y-%m-%d-%T_$wx$h.png' -e 'mv $f /tmp/'
+bindsym Print exec scrot -e 'mv $f /tmp/'
 bindsym $mod+Print exec gnome-screenshot -i -a
 
 # Toggle fastly terminal
 bindsym $mod+Escape exec ~/.i3/bin/fn esc
+bindcode $mod+49 exec ~/.i3/bin/fn 0
 bindsym $mod+F12 exec ~/.i3/bin/fn 12
 
 # More workspaces
@@ -344,29 +364,22 @@ bindsym XF86AudioPrev exec mpc prev
 
 bindsym XF86Launch1 exec xset dpms force off
 
-# Assign workspace
-assign [class="keepassxc"] $tag0
-
 ## shortcut
 # emacs
 bindsym $mod+Mod1+i exec emacs
-# keepassx
-bindsym $mod+Mod1+k exec keepassxc
-# email
-bindsym $mod+Mod1+e exec thunderbird
+
 # browser
-bindsym $mod+Mod1+b exec firefox -P default
-bindsym $mod+Mod1+Shift+b exec firefox -P default --private-window
+bindsym $mod+Mod1+n exec nyxt
+bindsym $mod+Mod1+b exec firefox -P github
+bindsym $mod+Mod1+Shift+b exec firefox -P nonproxy --private-window
 bindsym $mod+Mod1+g exec chromium --temp-profile
 bindsym $mod+Mod1+Shift+g exec chromium --temp-profile --incognito
-# gimp
-bindsym $mod+Mod1+p exec gimp
-# wicd
-bindsym $mod+Mod1+w exec wicd-client -n
-# explore
-bindsym $mod+Mod1+r exec /usr/bin/rxvt -e ranger
 
-bindcode $mod+90 [title="YouTube"] scratchpad show
-for_window [title="YouTube"] sticky enable
+# bindcode $mod+90 [title="VTV"] scratchpad show
+for_window [title="Chromium"] sticky enable
 
-exec i3-msg workspace 1 $tag1
+# exec i3-msg workspace 1 $tag1
+# bindsym $mod+Mod1+Shift+p exec bash "xrandr --output LVDS1 --auto && xrandr --output VGA1 --auto"
+
+# insert date-time Win+]
+bindcode $mod+35 exec ~/.i3/bin/xdate-insert

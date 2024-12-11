@@ -1,0 +1,62 @@
+#Title: Internet and network
+
+#Section: Web browsers
+#Description: firefox-esr
+firefox-esr
+webext-ublock-origin-firefox
+# webext-keepassxc-browser
+
+#Section: Bittorrent
+#Description: transmission-gtk
+transmission-gtk
+transmission-cli
+
+#Section: Network management
+#Description: network-manager-gnome
+network-manager-gnome
+network-manager-openvpn-gnome
+wireguard
+dnsmasq-base
+hostname
+bridge-utils
+ethtool
+#Section: Wireless
+#Description: blueman
+wpasupplicant
+blueman
+bluetooth
+blueman
+wireless-regdb
+
+#Section: Firewall
+#Description: gufw
+iptables
+#Alt: ferm
+#Alt: iptables-persistent
+#Alt: firehol
+#Alt: fail2ban
+#Alt: ipset-persistent
+#Alt: crowdsec
+#Alt: opensnitch
+
+#Section: Network diagnostic/monitoring
+#Description: gnome-nettool
+traceroute
+dnsutils
+#Section: SSH
+#Description: openssh-server
+openssh-client
+
+#Section: Tor
+tor-geoipdb
+tor
+torsocks
+#Alt: torbrowser-launcher
+
+#Section: GeoIP databases
+#Alt: geoip-bin
+#Alt: geoip-database
+
+#Section: Out-of-band management
+#Alt: ipmitool
+#Alt: gwakeonlan

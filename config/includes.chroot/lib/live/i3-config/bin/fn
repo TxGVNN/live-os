@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Giap Tran <txgvnn@gmail.com>
 #cat >> .i3/config <<EOF
 #bindsym $mod+F1 exec fn 1
@@ -30,7 +30,7 @@ if [ "$#" -eq 0 ]; then
 	i3 mark "$name"
 	i3 move scratchpad &> /dev/null
 	if which screen > /dev/null; then
-		screen -S "$name" -t "$name"
+		screen -S "$name" -t "$name" -c ~/.screenrc-fn
 	fi
 	bash
 	exit

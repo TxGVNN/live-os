@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+WS=$(i3-msg -t get_workspaces   | jq '.[] | select(.focused==true).num')
+xst -e dtach -A "/tmp/.${LOGNAME}_term_${WS}_$(date +%s).dtach" -E -z bash -l
