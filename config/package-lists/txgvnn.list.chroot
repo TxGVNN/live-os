@@ -64,3 +64,6 @@ xinit
 xinput
 xsel
 zip
+overlayroot
+fuse-overlayfs
+zstd

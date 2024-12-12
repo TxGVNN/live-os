@@ -10,7 +10,7 @@ LB_BINARY_FILESYSTEM="ext4"
 LB_APT_INDICES="false"
 
 # Set boot parameters
-LB_BOOTAPPEND_LIVE="boot=live config splash"
+LB_BOOTAPPEND_LIVE="boot=live config splash persistence "
 
 # Set boot parameters
 LB_BOOTAPPEND_INSTALL=""
@@ -86,13 +86,13 @@ LB_ISO_VOLUME="debian-live-config-4.1.0"
 LB_JFFS2_ERASEBLOCK=""
 
 # Set memtest
-LB_MEMTEST="memtest86+"
+LB_MEMTEST="none"
 
 # Set loadlin
 LB_LOADLIN="true"
 
 # Set win32-loader
-LB_WIN32_LOADER="true"
+LB_WIN32_LOADER="false"
 
 # Set net tarball
 LB_NET_TARBALL="true"
