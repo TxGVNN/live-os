@@ -311,6 +311,7 @@ exec --no-startup-id ~/.i3/bin/redshift
 # exec --no-startup-id setxkbmap -layout us -option ctrl:nocaps
 
 bindsym $mod+c exec ~/.i3/bin/dich
+bindsym $mod+p exec /usr/share/doc/pass/examples/dmenu/passmenu
 bindsym $mod+Shift+p exec ~/.i3/bin/speak
 # clipboard manager
 exec --no-startup-id ~/.i3/bin/clipmenud

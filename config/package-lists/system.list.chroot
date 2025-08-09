@@ -88,13 +88,13 @@ libpam-systemd
 firmware-linux-free
 firmware-realtek
 firmware-atheros
-firmware-b43-installer
+# firmware-b43-installer
 firmware-brcm80211
 firmware-ipw2x00
 firmware-iwlwifi
 amd64-microcode
 intel-microcode
-#Alt: firmware-linux-nonfree
+firmware-linux-nonfree
 #Alt: firmware-misc-nonfree
 #Alt: firmware-amd-graphics
 #Alt: firmware-intel-sound
