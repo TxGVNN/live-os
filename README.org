@@ -16,7 +16,7 @@
    make build
    #+END_SRC
 
-*** Requried
+*** Requirements
     #+BEGIN_SRC
     apt-get install live-build
     #+END_SRC
